@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Sales Analyzer — Taylor Intelligence</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141416;
+    --surface2: #1c1c1f;
+    --border: #2a2a2e;
+    --text: #e8e8e6;
+    --muted: #666664;
+    --accent: #c8f564;
+    --accent-dim: rgba(200,245,100,0.08);
+    --red: #ff5f57;
+    --red-dim: rgba(255,95,87,0.08);
+    --amber: #ffbd2e;
+    --amber-dim: rgba(255,189,46,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 48px 32px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 14px;
+    resize: vertical;
+    min-height: 220px;
+    outline: none;
+    line-height: 1.8;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+
+  textarea::placeholder { color: var(--muted); }
+
+  .format-hint {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .example-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s;
+  }
+
+  .example-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .analyze-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    color: #0d0d0f;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    margin-bottom: 32px;
+    transition: opacity 0.15s;
+  }
+
+  .analyze-btn:hover { opacity: 0.85; }
+  .analyze-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  #results { display: none; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .chart-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-wrap { position: relative; height: 160px; margin-top: 20px; }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 100%;
+  }
+
+  .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 3px; }
+
+  .bar-day-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .bar {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    transition: opacity 0.2s;
+    cursor: default;
+    position: relative;
+  }
+
+  .bar:hover { opacity: 0.75; }
+
+  .bar-bars { display: flex; align-items: flex-end; gap: 2px; width: 100%; height: 140px; }
+
+  .week-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 4px; }
+
+  .heatmap {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    gap: 3px;
+    margin-top: 20px;
+  }
+
+  .hm-cell {
+    height: 36px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .hm-label {
+    background: none;
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    justify-content: flex-end;
+    padding-right: 8px;
+  }
+
+  .hm-header {
+    background: none;
+    color: var(--muted);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    height: 24px;
+  }
+
+  .insights-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .insight {
+    padding: 18px 20px;
+    border-radius: 3px;
+    margin-bottom: 12px;
+    border-left: 3px solid;
+    line-height: 1.7;
+    font-size: 13px;
+  }
+
+  .insight:last-child { margin-bottom: 0; }
+
+  .insight.positive {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+
+  .insight.warning {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+  }
+
+  .insight.negative {
+    background: var(--red-dim);
+    border-color: var(--red);
+  }
+
+  .insight-tag {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .insight.positive .insight-tag { color: var(--accent); }
+  .insight.warning .insight-tag { color: var(--amber); }
+  .insight.negative .insight-tag { color: var(--red); }
+
+  .anomaly-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .anomaly-row:last-child { border-bottom: none; }
+
+  .anomaly-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .anomaly-date { color: var(--muted); font-size: 11px; min-width: 80px; }
+  .anomaly-val { font-weight: 500; min-width: 70px; }
+  .anomaly-desc { color: var(--muted); font-size: 12px; }
+
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .error-msg {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 14px 18px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>Sales Pattern <em>Analyzer</em></h1>
+      <div class="subtitle">Paste 4 weeks of daily sales — get consultant-grade insights in seconds</div>
+    </div>
+    <div class="brand">Taylor Intelligence</div>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-label">Paste your daily sales data</div>
+      <textarea id="salesInput" placeholder="Mon 847
+Tue 612
+Wed 703
+Thu 891
+Fri 1240
+Sat 1580
+Sun 1102
+Mon 799
+...one value per line, 28 days total"></textarea>
+      <div class="format-hint">One figure per line · 28 days (4 weeks) · Numbers only or Day + Number</div>
+      <button class="example-btn" onclick="loadExample()">Load example data →</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">About this tool</div>
+      <div style="color:var(--muted);line-height:1.9;font-size:12px;">
+        <p style="margin-bottom:14px;">Paste your last 28 days of daily sales revenue. The analyzer will surface:</p>
+        <p style="margin-bottom:8px;color:var(--text);">— Strongest & weakest days of the week</p>
+        <p style="margin-bottom:8px;color:var(--text);">— Week-over-week trend direction</p>
+        <p style="margin-bottom:8px;color:var(--text);">— Anomalies worth investigating</p>
+        <p style="margin-bottom:8px;color:var(--text);">— Plain-English insights like a consultant</p>
+        <p style="margin-top:20px;">No data leaves your browser. Everything runs locally.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+  <button class="analyze-btn" onclick="analyze()">Analyze Sales Patterns →</button>
+
+  <div id="results">
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value" id="statTotal" style="color:var(--accent)">—</div>
+        <div class="stat-label">28-Day Revenue</div>
+        <div class="stat-sub" id="statAvgDay">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statBestDay" style="color:var(--accent)">—</div>
+        <div class="stat-label">Best Day of Week</div>
+        <div class="stat-sub" id="statBestAvg">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statWorstDay" style="color:var(--red)">—</div>
+        <div class="stat-label">Weakest Day</div>
+        <div class="stat-sub" id="statWorstAvg">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="statTrend">—</div>
+        <div class="stat-label">Weekly Trend</div>
+        <div class="stat-sub" id="statTrendSub">—</div>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="panel-label">Weekly breakdown — 4 weeks overlaid</div>
+      <div class="chart-wrap">
+        <div class="bars" id="barsChart"></div>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="panel-label">Sales heatmap by day & week</div>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+
+    <div class="insights-panel">
+      <div class="panel-label">Consultant insights</div>
+      <div id="insightsList"></div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="panel-label">Anomalies flagged</div>
+      <div id="anomalyList"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">Taylor Intelligence · Restaurant Sales Analyzer · Data never leaves your browser</div>
+</div>
+
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const WEEK_COLORS = ['#3a7bd5','#6c5ce7','#00b894','#fdcb6e'];
+
+function loadExample() {
+  const base = [820,590,680,870,1320,1680,1040];
+  let lines = [];
+  for (let w = 0; w < 4; w++) {
+    for (let d = 0; d < 7; d++) {
+      const noise = (Math.random() - 0.5) * 180;
+      const trend = w * 40;
+      const val = Math.max(200, Math.round(base[d] + noise + trend));
+      lines.push(`${DAYS[d]} ${val}`);
+    }
+  }
+  document.getElementById('salesInput').value = lines.join('\n');
+}
+
+function parseInput(raw) {
+  const lines = raw.trim().split('\n').map(l => l.trim()).filter(l => l);
+  const values = [];
+  for (const line of lines) {
+    const num = parseFloat(line.replace(/[^0-9.]/g, ''));
+    if (!isNaN(num)) values.push(num);
+  }
+  return values;
+}
+
+function fmt(n) {
+  if (n >= 1000) return '$' + (n/1000).toFixed(1) + 'k';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function fmtFull(n) { return '$' + Math.round(n).toLocaleString(); }
+
+function pct(a, b) {
+  const p = ((a - b) / b * 100);
+  return (p > 0 ? '+' : '') + p.toFixed(1) + '%';
+}
+
+function analyze() {
+  const raw = document.getElementById('salesInput').value;
+  const vals = parseInput(raw);
+  const errEl = document.getElementById('errorMsg');
+
+  if (vals.length < 14) {
+    errEl.style.display = 'block';
+    errEl.textContent = `Need at least 14 days of data. Found ${vals.length} values.`;
+    return;
+  }
+
+  errEl.style.display = 'none';
+
+  const days = vals.slice(0, 28);
+  const weeks = [];
+  for (let w = 0; w < Math.floor(days.length / 7); w++) {
+    weeks.push(days.slice(w * 7, w * 7 + 7));
+  }
+
+  // Day averages
+  const dayAvgs = DAYS.map((_, di) => {
+    const vals = weeks.map(w => w[di]).filter(v => v !== undefined);
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  });
+
+  const bestDayIdx = dayAvgs.indexOf(Math.max(...dayAvgs));
+  const worstDayIdx = dayAvgs.indexOf(Math.min(...dayAvgs));
+
+  // Week totals
+  const weekTotals = weeks.map(w => w.reduce((a, b) => a + b, 0));
+  const lastWeek = weekTotals[weekTotals.length - 1];
+  const firstWeek = weekTotals[0];
+  const trendPct = ((lastWeek - firstWeek) / firstWeek * 100);
+
+  const total = days.reduce((a, b) => a + b, 0);
+  const avgDay = total / days.length;
+
+  // Stats
+  document.getElementById('statTotal').textContent = fmt(total);
+  document.getElementById('statAvgDay').textContent = `avg ${fmt(avgDay)}/day`;
+  document.getElementById('statBestDay').textContent = DAYS[bestDayIdx];
+  document.getElementById('statBestAvg').textContent = `avg ${fmt(dayAvgs[bestDayIdx])}`;
+  document.getElementById('statWorstDay').textContent = DAYS[worstDayIdx];
+  document.getElementById('statWorstAvg').textContent = `avg ${fmt(dayAvgs[worstDayIdx])}`;
+
+  const trendEl = document.getElementById('statTrend');
+  trendEl.textContent = (trendPct > 0 ? '↑ ' : '↓ ') + Math.abs(trendPct).toFixed(1) + '%';
+  trendEl.style.color = trendPct > 0 ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('statTrendSub').textContent = `wk1 → wk${weeks.length}`;
+
+  // Bar chart
+  const maxVal = Math.max(...days);
+  const barsEl = document.getElementById('barsChart');
+  barsEl.innerHTML = '';
+  for (let d = 0; d < 7; d++) {
+    const grp = document.createElement('div');
+    grp.className = 'bar-group';
+    const barsWrap = document.createElement('div');
+    barsWrap.className = 'bar-bars';
+    weeks.forEach((w, wi) => {
+      const b = document.createElement('div');
+      b.className = 'week-bar';
+      const h = Math.max(4, (w[d] / maxVal) * 130);
+      b.style.height = h + 'px';
+      b.style.background = WEEK_COLORS[wi % WEEK_COLORS.length];
+      b.style.opacity = '0.75';
+      b.title = `${DAYS[d]} Wk${wi+1}: ${fmtFull(w[d])}`;
+      barsWrap.appendChild(b);
+    });
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-day-label';
+    lbl.textContent = DAYS[d];
+    grp.appendChild(barsWrap);
+    grp.appendChild(lbl);
+    barsEl.appendChild(grp);
+  }
+
+  // Heatmap
+  const hmEl = document.getElementById('heatmap');
+  hmEl.innerHTML = '';
+  const hmMax = Math.max(...days);
+  const hmMin = Math.min(...days);
+
+  // Header row
+  const emptyHdr = document.createElement('div');
+  emptyHdr.className = 'hm-cell hm-header';
+  hmEl.appendChild(emptyHdr);
+  DAYS.forEach(d => {
+    const hdr = document.createElement('div');
+    hdr.className = 'hm-cell hm-header';
+    hdr.textContent = d;
+    hmEl.appendChild(hdr);
+  });
+
+  weeks.forEach((w, wi) => {
+    const lbl = document.createElement('div');
+    lbl.className = 'hm-cell hm-label';
+    lbl.textContent = `Wk ${wi+1}`;
+    hmEl.appendChild(lbl);
+    w.forEach((val, di) => {
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      const norm = (val - hmMin) / (hmMax - hmMin);
+      const r = Math.round(13 + norm * (200 - 13));
+      const g = Math.round(13 + norm * (245 - 13));
+      const b = Math.round(15 + norm * (100 - 15));
+      cell.style.background = `rgba(${r},${g},${b},${0.15 + norm * 0.6})`;
+      cell.style.color = norm > 0.6 ? '#0d0d0f' : 'var(--text)';
+      cell.title = `${DAYS[di]} Wk${wi+1}: ${fmtFull(val)}`;
+      cell.textContent = fmt(val);
+      hmEl.appendChild(cell);
+    });
+  });
+
+  // Anomalies
+  const mean = avgDay;
+  const variance = days.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / days.length;
+  const stdDev = Math.sqrt(variance);
+  const anomalies = [];
+  days.forEach((v, i) => {
+    const z = (v - mean) / stdDev;
+    if (Math.abs(z) > 1.5) {
+      const wk = Math.floor(i / 7);
+      const dy = i % 7;
+      anomalies.push({ day: DAYS[dy], week: wk + 1, val: v, z, idx: i });
+    }
+  });
+
+  const anomEl = document.getElementById('anomalyList');
+  if (anomalies.length === 0) {
+    anomEl.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">No significant anomalies detected — sales are consistent.</div>';
+  } else {
+    anomEl.innerHTML = anomalies.slice(0, 6).map(a => `
+      <div class="anomaly-row">
+        <div class="anomaly-dot" style="background:${a.z > 0 ? 'var(--accent)' : 'var(--red)'}"></div>
+        <div class="anomaly-date">${a.day}, Wk ${a.week}</div>
+        <div class="anomaly-val" style="color:${a.z > 0 ? 'var(--accent)' : 'var(--red)'}">${fmtFull(a.val)}</div>
+        <div class="anomaly-desc">${a.z > 0 ? `${pct(a.val, mean)} above average — investigate what drove this` : `${pct(a.val, mean)} below average — worth reviewing`}</div>
+      </div>
+    `).join('');
+  }
+
+  // Insights
+  const gap = dayAvgs[bestDayIdx] / dayAvgs[worstDayIdx];
+  const midweekAvg = (dayAvgs[1] + dayAvgs[2]) / 2;
+  const weekendAvg = (dayAvgs[4] + dayAvgs[5]) / 2;
+  const weekendLift = ((weekendAvg - midweekAvg) / midweekAvg * 100);
+
+  const insightsData = [];
+
+  // Insight 1 — trend
+  if (Math.abs(trendPct) > 5) {
+    insightsData.push({
+      type: trendPct > 0 ? 'positive' : 'negative',
+      tag: trendPct > 0 ? 'Growth Signal' : 'Declining Trend',
+      text: trendPct > 0
+        ? `Revenue grew ${trendPct.toFixed(1)}% from week 1 to week ${weeks.length} — a clear upward trend. Week ${weeks.length} total of ${fmtFull(lastWeek)} is your new baseline to protect.`
+        : `Revenue declined ${Math.abs(trendPct).toFixed(1)}% across the period. Week ${weeks.length} brought in ${fmtFull(lastWeek)} vs ${fmtFull(firstWeek)} in week 1. This warrants a closer look at what changed.`
+    });
+  } else {
+    insightsData.push({
+      type: 'warning',
+      tag: 'Flat Trend',
+      text: `Revenue is essentially flat across 4 weeks (${pct(lastWeek, firstWeek)} change). Stable is fine, but this likely means you've hit a ceiling without a new demand driver.`
+    });
+  }
+
+  // Insight 2 — best/worst day gap
+  insightsData.push({
+    type: gap > 2 ? 'warning' : 'positive',
+    tag: 'Day-of-Week Concentration',
+    text: gap > 2
+      ? `Your ${DAYS[bestDayIdx]}s average ${fmtFull(dayAvgs[bestDayIdx])} — ${gap.toFixed(1)}x more than ${DAYS[worstDayIdx]}s at ${fmtFull(dayAvgs[worstDayIdx])}. Revenue is heavily concentrated. A targeted ${DAYS[worstDayIdx]} promotion could meaningfully move your weekly number.`
+      : `Sales are reasonably distributed across the week. ${DAYS[bestDayIdx]} leads at ${fmtFull(dayAvgs[bestDayIdx])} and ${DAYS[worstDayIdx]} trails at ${fmtFull(dayAvgs[worstDayIdx])} — a ${gap.toFixed(1)}x gap that's manageable.`
+  });
+
+  // Insight 3 — weekend vs midweek
+  if (Math.abs(weekendLift) > 15) {
+    insightsData.push({
+      type: weekendLift > 0 ? 'positive' : 'warning',
+      tag: weekendLift > 0 ? 'Weekend Strength' : 'Midweek Opportunity',
+      text: weekendLift > 0
+        ? `Weekend sales run ${weekendLift.toFixed(0)}% above midweek average. You're a destination on weekends. The question is whether you're fully staffed and stocked to capture all of it.`
+        : `Midweek is outperforming weekends by ${Math.abs(weekendLift).toFixed(0)}% — unusual for most restaurants. This could signal strong lunch trade, corporate clientele, or a weekend marketing gap.`
+    });
+  }
+
+  // Insight 4 — anomaly insight
+  const highAnomalies = anomalies.filter(a => a.z > 1.5);
+  if (highAnomalies.length > 0) {
+    const best = highAnomalies.sort((a,b) => b.val - a.val)[0];
+    insightsData.push({
+      type: 'positive',
+      tag: 'Peak Day Analysis',
+      text: `Your single best day was ${DAYS[best.day] || best.day} in week ${best.week} at ${fmtFull(best.val)} — ${pct(best.val, mean)} above average. Do you know what drove it? Replicating that condition once per week adds roughly ${fmtFull((best.val - mean) * 4)} to your monthly revenue.`
+    });
+  }
+
+  // Insight 5 — consistency
+  const cv = (stdDev / mean) * 100;
+  insightsData.push({
+    type: cv > 35 ? 'warning' : 'positive',
+    tag: cv > 35 ? 'High Volatility' : 'Consistent Operation',
+    text: cv > 35
+      ? `Sales variability is high (${cv.toFixed(0)}% coefficient of variation). Inconsistent days make staffing and ordering difficult. Identifying and smoothing the low days would reduce waste and improve margins.`
+      : `Sales are relatively predictable (${cv.toFixed(0)}% variation). This consistency is a real operational asset — it makes scheduling, ordering, and forecasting more reliable.`
+  });
+
+  document.getElementById('insightsList').innerHTML = insightsData.slice(0, 5).map(ins => `
+    <div class="insight ${ins.type}">
+      <span class="insight-tag">${ins.tag}</span>
+      ${ins.text}
+    </div>
+  `).join('');
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
