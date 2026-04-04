@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>McDonald's Labor Cost Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff8f0; color: #1a1a1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; max-width: 520px; width: 100%; }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .arc { font-size: 2rem; line-height: 1; }
+  h1 { font-size: 1.3rem; font-weight: 700; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 28px; }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #DA291C; margin-bottom: 12px; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 0.8rem; color: #555; margin-bottom: 4px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  input[type=range] { flex: 1; accent-color: #DA291C; cursor: pointer; }
+  .val { font-weight: 700; color: #DA291C; min-width: 80px; text-align: right; font-size: 0.95rem; }
+  hr { border: none; border-top: 1px solid #f0f0f0; margin: 24px 0; }
+  .results { background: #fff8f0; border-radius: 12px; padding: 22px; }
+  .results-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 16px; }
+  .metric { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
+  .metric .label { color: #555; }
+  .metric .amount { font-weight: 700; }
+  .metric.big { padding-top: 12px; border-top: 1px solid #ffe0cc; margin-top: 4px; }
+  .metric.big .label { font-weight: 600; color: #1a1a1a; }
+  .metric.big .amount { font-size: 1.25rem; color: #DA291C; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
+  .badge.red { background: #fee2e2; color: #dc2626; }
+  .badge.green { background: #dcfce7; color: #16a34a; }
+  .tip { background: #FFC72C22; border-left: 3px solid #FFC72C; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #555; margin-top: 16px; line-height: 1.5; }
+  footer { text-align: center; margin-top: 22px; font-size: 0.72rem; color: #ccc; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span class="arc">🍟</span><div><h1>Labor Cost Calculator</h1></div></div>
+  <p class="subtitle">McDonald's franchise — per location, per week</p>
+
+  <div class="section">
+    <div class="section-title">Crew</div>
+    <div class="field">
+      <label>Crew members per shift</label>
+      <div class="row"><input type="range" id="crewPerShift" min="3" max="20" value="8"><span class="val" id="crewPerShiftVal">8</span></div>
+    </div>
+    <div class="field">
+      <label>Shifts per day</label>
+      <div class="row"><input type="range" id="shiftsPerDay" min="1" max="4" value="3"><span class="val" id="shiftsPerDayVal">3</span></div>
+    </div>
+    <div class="field">
+      <label>Avg hours per shift</label>
+      <div class="row"><input type="range" id="shiftHours" min="4" max="10" value="8"><span class="val" id="shiftHoursVal">8 hrs</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pay & Turnover</div>
+    <div class="field">
+      <label>Average hourly wage</label>
+      <div class="row"><input type="range" id="wage" min="17" max="35" value="20" step="0.5"><span class="val" id="wageVal">$20/hr</span></div>
+    </div>
+    <div class="field">
+      <label>Annual turnover rate</label>
+      <div class="row"><input type="range" id="turnover" min="20" max="200" value="100" step="5"><span class="val" id="turnoverVal">100%</span></div>
+    </div>
+    <div class="field">
+      <label>Cost to replace one employee</label>
+      <div class="row"><input type="range" id="replaceCost" min="500" max="5000" value="2000" step="100"><span class="val" id="replaceCostVal">$2,000</span></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="results">
+    <div class="results-title">Weekly Snapshot</div>
+    <div class="metric"><span class="label">Total crew hours/week</span><span class="amount" id="totalHours">—</span></div>
+    <div class="metric"><span class="label">Gross labor cost/week</span><span class="amount" id="laborCost">—</span></div>
+    <div class="metric"><span class="label">Turnover cost/week</span><span class="amount" id="turnoverCost">—</span></div>
+    <div class="metric big">
+      <span class="label">Total weekly labor burden</span>
+      <span class="amount" id="totalBurden">—</span>
+    </div>
+    <div class="tip" id="tip">Loading insight...</div>
+  </div>
+  <footer>Built by Taylor Intelligence · For franchise operators</footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+
+  function calc() {
+    const crew = +$('crewPerShift').value;
+    const shifts = +$('shiftsPerDay').value;
+    const hours = +$('shiftHours').value;
+    const wage = +$('wage').value;
+    const turnover = +$('turnover').value / 100;
+    const replace = +$('replaceCost').value;
+
+    const totalHours = crew * shifts * hours * 7;
+    const laborCost = totalHours * wage;
+    const totalCrew = crew * shifts;
+    const annualReplacements = totalCrew * turnover;
+    const weeklyTurnover = (annualReplacements * replace) / 52;
+    const total = laborCost + weeklyTurnover;
+    const annualTotal = total * 52;
+
+    $('crewPerShiftVal').textContent = crew;
+    $('shiftsPerDayVal').textContent = shifts;
+    $('shiftHoursVal').textContent = hours + ' hrs';
+    $('wageVal').textContent = '$' + wage + '/hr';
+    $('turnoverVal').textContent = turnover * 100 + '%';
+    $('replaceCostVal').textContent = fmt(replace);
+
+    $('totalHours').textContent = totalHours.toLocaleString() + ' hrs';
+    $('laborCost').textContent = fmt(laborCost) + '/wk';
+    $('turnoverCost').textContent = fmt(weeklyTurnover) + '/wk';
+    $('totalBurden').textContent = fmt(total) + '/wk';
+
+    const pct = Math.round((weeklyTurnover / total) * 100);
+    $('tip').innerHTML = `📊 Turnover is eating <strong>${pct}% of your labor budget</strong> — that's <strong>${fmt(annualReplacements * replace)}/year</strong> just in replacement costs. Reducing turnover 20% saves <strong>${fmt(annualReplacements * replace * 0.2)}/year</strong> per location.`;
+  }
+
+  ['crewPerShift','shiftsPerDay','shiftHours','wage','turnover','replaceCost'].forEach(id => $(id).addEventListener('input', calc));
+  calc();
+</script>
+</body>
+</html>
