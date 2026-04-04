@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dental Practice ROI Calculator — Taylor Intelligence</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --ink: #0f172a; --accent: #0ea5e9; --accent-light: #e0f2fe; --muted: #64748b; --border: #e2e8f0; --bg: #f8fafc; --white: #fff; --green: #16a34a; --red: #dc2626; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
+  header { background: var(--ink); color: var(--white); padding: 28px 32px; margin-bottom: 32px; }
+  .header-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-title { font-size: 1.1rem; font-weight: 800; }
+  .header-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+  .badge { background: var(--accent); color: var(--white); font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tabs { max-width: 960px; margin: 0 auto 28px; padding: 0 24px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab { padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .panel { display: none; max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  .panel.active { display: block; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 24px; }
+  .card-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 18px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 0.82rem; color: var(--ink); margin-bottom: 5px; font-weight: 500; }
+  .slider-row { display: flex; gap: 10px; align-items: center; }
+  input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+  .val { font-weight: 700; color: var(--accent); min-width: 90px; text-align: right; font-size: 0.92rem; }
+  .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .stat { background: var(--bg); border-radius: 10px; padding: 16px; }
+  .stat-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .stat-value { font-size: 1.35rem; font-weight: 800; }
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue { color: var(--accent); }
+  .insight { background: var(--accent-light); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 0.83rem; color: #0c4a6e; line-height: 1.6; margin-top: 16px; }
+  .full-width { grid-column: 1 / -1; }
+  .footer-note { text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 32px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } header { padding: 20px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-title">🦷 Dental Practice Dashboard</div>
+      <div class="header-sub">Revenue, No-Shows & Admin Cost Analysis</div>
+    </div>
+    <div class="badge">Taylor Intelligence</div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('revenue', event)">Revenue & Capacity</div>
+  <div class="tab" onclick="showTab('noshow', event)">No-Show Cost</div>
+  <div class="tab" onclick="showTab('admin', event)">Admin Overhead</div>
+</div>
+
+<!-- TAB 1: REVENUE -->
+<div class="panel active" id="tab-revenue">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Practice Inputs</div>
+      <div class="field"><label>Dentists / providers</label><div class="slider-row"><input type="range" id="dentists" min="1" max="10" value="2"><span class="val" id="dentistsV">2</span></div></div>
+      <div class="field"><label>Appointments per dentist per day</label><div class="slider-row"><input type="range" id="apptPerDay" min="4" max="16" value="10"><span class="val" id="apptPerDayV">10</span></div></div>
+      <div class="field"><label>Avg revenue per appointment</label><div class="slider-row"><input type="range" id="apptRev" min="100" max="1200" value="280" step="10"><span class="val" id="apptRevV">$280</span></div></div>
+      <div class="field"><label>Working days per month</label><div class="slider-row"><input type="range" id="workDays" min="15" max="25" value="20"><span class="val" id="workDaysV">20</span></div></div>
+      <div class="field"><label>Current chair utilization %</label><div class="slider-row"><input type="range" id="utilization" min="50" max="100" value="75"><span class="val" id="utilizationV">75%</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue Results</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">Monthly revenue (actual)</div><div class="stat-value green" id="monthlyActual">—</div></div>
+        <div class="stat"><div class="stat-label">Monthly at 100% capacity</div><div class="stat-value blue" id="monthlyFull">—</div></div>
+        <div class="stat"><div class="stat-label">Revenue left on table/mo</div><div class="stat-value red" id="revenueGap">—</div></div>
+        <div class="stat"><div class="stat-label">Annual revenue (actual)</div><div class="stat-value green" id="annualActual">—</div></div>
+        <div class="stat"><div class="stat-label">Annual at full capacity</div><div class="stat-value blue" id="annualFull">—</div></div>
+        <div class="stat"><div class="stat-label">Opportunity/year</div><div class="stat-value red" id="annualGap">—</div></div>
+      </div>
+      <div class="insight" id="revInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: NO-SHOW -->
+<div class="panel" id="tab-noshow">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">No-Show Inputs</div>
+      <div class="field"><label>No-show / cancellation rate %</label><div class="slider-row"><input type="range" id="noShowRate" min="1" max="30" value="12"><span class="val" id="noShowRateV">12%</span></div></div>
+      <div class="field"><label>Avg revenue per appointment</label><div class="slider-row"><input type="range" id="nsApptRev" min="100" max="1200" value="280" step="10"><span class="val" id="nsApptRevV">$280</span></div></div>
+      <div class="field"><label>Total appointments per month</label><div class="slider-row"><input type="range" id="totalAppts" min="50" max="600" value="200" step="10"><span class="val" id="totalApptsV">200</span></div></div>
+      <div class="field"><label>Staff time lost per no-show (mins)</label><div class="slider-row"><input type="range" id="staffMins" min="10" max="60" value="20"><span class="val" id="staffMinsV">20 min</span></div></div>
+      <div class="field"><label>Staff hourly cost</label><div class="slider-row"><input type="range" id="staffRate" min="18" max="45" value="25"><span class="val" id="staffRateV">$25/hr</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">No-Show Cost Results</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">No-shows per month</div><div class="stat-value red" id="nsCount">—</div></div>
+        <div class="stat"><div class="stat-label">Lost revenue/month</div><div class="stat-value red" id="nsRevLost">—</div></div>
+        <div class="stat"><div class="stat-label">Staff time wasted/month</div><div class="stat-value red" id="nsStaffCost">—</div></div>
+        <div class="stat"><div class="stat-label">Total monthly cost</div><div class="stat-value red" id="nsTotalCost">—</div></div>
+        <div class="stat"><div class="stat-label">Annual cost of no-shows</div><div class="stat-value red" id="nsAnnual">—</div></div>
+        <div class="stat"><div class="stat-label">Savings w/ 50% reduction</div><div class="stat-value green" id="nsSavings">—</div></div>
+      </div>
+      <div class="insight" id="nsInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: ADMIN -->
+<div class="panel" id="tab-admin">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Admin Cost Inputs</div>
+      <div class="field"><label>Front desk staff (FTEs)</label><div class="slider-row"><input type="range" id="frontDesk" min="1" max="8" value="2"><span class="val" id="frontDeskV">2</span></div></div>
+      <div class="field"><label>Avg hourly wage (front desk)</label><div class="slider-row"><input type="range" id="fdWage" min="18" max="35" value="22"><span class="val" id="fdWageV">$22/hr</span></div></div>
+      <div class="field"><label>Hours/week on manual scheduling</label><div class="slider-row"><input type="range" id="schedHrs" min="1" max="30" value="10"><span class="val" id="schedHrsV">10 hrs</span></div></div>
+      <div class="field"><label>Hours/week on insurance claims</label><div class="slider-row"><input type="range" id="claimHrs" min="1" max="25" value="8"><span class="val" id="claimHrsV">8 hrs</span></div></div>
+      <div class="field"><label>Hours/week on patient follow-up</label><div class="slider-row"><input type="range" id="followHrs" min="1" max="20" value="6"><span class="val" id="followHrsV">6 hrs</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Admin Cost Results</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">Total staff cost/month</div><div class="stat-value red" id="staffCostMo">—</div></div>
+        <div class="stat"><div class="stat-label">Scheduling cost/month</div><div class="stat-value red" id="schedCost">—</div></div>
+        <div class="stat"><div class="stat-label">Claims processing/month</div><div class="stat-value red" id="claimCost">—</div></div>
+        <div class="stat"><div class="stat-label">Follow-up cost/month</div><div class="stat-value red" id="followCost">—</div></div>
+        <div class="stat"><div class="stat-label">Automatable cost/year</div><div class="stat-value red" id="autoAnnual">—</div></div>
+        <div class="stat"><div class="stat-label">Savings w/ AI (est. 60%)</div><div class="stat-value green" id="aiSavings">—</div></div>
+      </div>
+      <div class="insight" id="adminInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<p class="footer-note">Built by Taylor Intelligence · taylorintelligence.ca</p>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+
+function showTab(name, e) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  $('tab-' + name).classList.add('active');
+  e.target.classList.add('active');
+}
+
+function calcRevenue() {
+  const d = +$('dentists').value, appt = +$('apptPerDay').value, rev = +$('apptRev').value;
+  const days = +$('workDays').value, util = +$('utilization').value / 100;
+  $('dentistsV').textContent = d; $('apptPerDayV').textContent = appt;
+  $('apptRevV').textContent = fmt(rev); $('workDaysV').textContent = days;
+  $('utilizationV').textContent = Math.round(util * 100) + '%';
+  const fullMo = d * appt * rev * days;
+  const actualMo = fullMo * util;
+  const gap = fullMo - actualMo;
+  $('monthlyActual').textContent = fmt(actualMo); $('monthlyFull').textContent = fmt(fullMo);
+  $('revenueGap').textContent = fmt(gap) + '/mo';
+  $('annualActual').textContent = fmt(actualMo * 12); $('annualFull').textContent = fmt(fullMo * 12);
+  $('annualGap').textContent = fmt(gap * 12) + '/yr';
+  $('revInsight').innerHTML = `At ${Math.round(util * 100)}% utilization, you're leaving <strong>${fmt(gap * 12)}/year</strong> on the table. Filling just 5 more slots per week adds <strong>${fmt(5 * rev * 48)}/year</strong> without adding a single provider.`;
+}
+
+function calcNoShow() {
+  const rate = +$('noShowRate').value / 100, rev = +$('nsApptRev').value;
+  const total = +$('totalAppts').value, mins = +$('staffMins').value, staffRate = +$('staffRate').value;
+  $('noShowRateV').textContent = Math.round(rate * 100) + '%'; $('nsApptRevV').textContent = fmt(rev);
+  $('totalApptsV').textContent = total; $('staffMinsV').textContent = mins + ' min';
+  $('staffRateV').textContent = '$' + staffRate + '/hr';
+  const nsCount = Math.round(total * rate);
+  const revLost = nsCount * rev;
+  const staffCost = nsCount * (mins / 60) * staffRate;
+  const totalCost = revLost + staffCost;
+  $('nsCount').textContent = nsCount + '/mo'; $('nsRevLost').textContent = fmt(revLost) + '/mo';
+  $('nsStaffCost').textContent = fmt(staffCost) + '/mo'; $('nsTotalCost').textContent = fmt(totalCost) + '/mo';
+  $('nsAnnual').textContent = fmt(totalCost * 12) + '/yr'; $('nsSavings').textContent = fmt(totalCost * 12 * 0.5) + '/yr';
+  $('nsInsight').innerHTML = `<strong>${nsCount} no-shows/month</strong> cost your practice <strong>${fmt(totalCost * 12)}/year</strong>. Automated SMS/email reminders typically cut no-shows by 40–60% — saving <strong>${fmt(totalCost * 12 * 0.5)}</strong> or more annually.`;
+}
+
+function calcAdmin() {
+  const staff = +$('frontDesk').value, wage = +$('fdWage').value;
+  const sched = +$('schedHrs').value, claims = +$('claimHrs').value, follow = +$('followHrs').value;
+  $('frontDeskV').textContent = staff; $('fdWageV').textContent = '$' + wage + '/hr';
+  $('schedHrsV').textContent = sched + ' hrs'; $('claimHrsV').textContent = claims + ' hrs'; $('followHrsV').textContent = follow + ' hrs';
+  const staffMo = staff * wage * 160;
+  const schedMo = sched * 4.33 * wage * staff;
+  const claimMo = claims * 4.33 * wage * staff;
+  const followMo = follow * 4.33 * wage * staff;
+  const autoMo = schedMo + claimMo + followMo;
+  const aiSave = autoMo * 12 * 0.6;
+  $('staffCostMo').textContent = fmt(staffMo) + '/mo'; $('schedCost').textContent = fmt(schedMo) + '/mo';
+  $('claimCost').textContent = fmt(claimMo) + '/mo'; $('followCost').textContent = fmt(followMo) + '/mo';
+  $('autoAnnual').textContent = fmt(autoMo * 12) + '/yr'; $('aiSavings').textContent = fmt(aiSave) + '/yr';
+  $('adminInsight').innerHTML = `Your front desk spends <strong>${sched + claims + follow} hours/week</strong> on tasks that can be partially or fully automated — scheduling, claims, and patient follow-up. AI automation could recover <strong>${fmt(aiSave)}/year</strong> without reducing headcount.`;
+}
+
+['dentists','apptPerDay','apptRev','workDays','utilization'].forEach(id => $(id).addEventListener('input', calcRevenue));
+['noShowRate','nsApptRev','totalAppts','staffMins','staffRate'].forEach(id => $(id).addEventListener('input', calcNoShow));
+['frontDesk','fdWage','schedHrs','claimHrs','followHrs'].forEach(id => $(id).addEventListener('input', calcAdmin));
+calcRevenue(); calcNoShow(); calcAdmin();
+</script>
+</body>
+</html>
