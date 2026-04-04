@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VA ROI Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #1a1a2e; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; max-width: 480px; width: 100%; }
+  h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 0.875rem; margin-bottom: 32px; }
+  .field { margin-bottom: 20px; }
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type=range] { width: 100%; accent-color: #4f46e5; cursor: pointer; }
+  .value-display { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+  .val { font-size: 1.1rem; font-weight: 700; color: #4f46e5; }
+  .hint { font-size: 0.75rem; color: #999; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 28px 0; }
+  .results { background: #f8f7ff; border-radius: 12px; padding: 24px; }
+  .results h2 { font-size: 0.8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; }
+  .metric { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .metric:last-child { margin-bottom: 0; padding-top: 12px; border-top: 1px solid #e8e5ff; }
+  .metric .label { font-size: 0.9rem; color: #444; }
+  .metric .amount { font-size: 1rem; font-weight: 700; }
+  .metric.highlight .amount { font-size: 1.3rem; color: #16a34a; }
+  .badge { display: inline-block; background: #dcfce7; color: #16a34a; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+  .badge.negative { background: #fee2e2; color: #dc2626; }
+  footer { text-align: center; margin-top: 24px; font-size: 0.75rem; color: #bbb; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>VA ROI Calculator</h1>
+  <p class="subtitle">See your return on hiring a virtual assistant</p>
+
+  <div class="field">
+    <label>Your hourly rate (billable value)</label>
+    <input type="range" id="hourlyRate" min="25" max="500" value="100" step="5">
+    <div class="value-display"><span class="val" id="hourlyRateVal">$100/hr</span><span class="hint">What your time is worth</span></div>
+  </div>
+
+  <div class="field">
+    <label>Hours/week lost to admin tasks</label>
+    <input type="range" id="adminHours" min="1" max="40" value="10" step="1">
+    <div class="value-display"><span class="val" id="adminHoursVal">10 hrs</span><span class="hint">Email, scheduling, data entry…</span></div>
+  </div>
+
+  <div class="field">
+    <label>VA cost (monthly)</label>
+    <input type="range" id="vaCost" min="200" max="5000" value="1200" step="100">
+    <div class="value-display"><span class="val" id="vaCostVal">$1,200/mo</span><span class="hint">Fully loaded VA cost</span></div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="results">
+    <h2>Your Monthly ROI</h2>
+    <div class="metric"><span class="label">Time reclaimed</span><span class="amount" id="timeReclaimed">—</span></div>
+    <div class="metric"><span class="label">Value of time freed</span><span class="amount" id="valueFreed">—</span></div>
+    <div class="metric"><span class="label">VA cost</span><span class="amount" id="vaCostDisplay">—</span></div>
+    <div class="metric highlight">
+      <span class="label"><strong>Net ROI</strong></span>
+      <span class="amount" id="netRoi">—</span>
+    </div>
+  </div>
+  <footer>Built by Taylor Intelligence · taylorintelligence.ai</footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => n < 0 ? `-$${Math.abs(n).toLocaleString()}` : `$${n.toLocaleString()}`;
+
+  function calc() {
+    const rate = +$('hourlyRate').value;
+    const hours = +$('adminHours').value;
+    const cost = +$('vaCost').value;
+    const weeklyHours = hours * 4.33;
+    const valueFreed = Math.round(rate * weeklyHours);
+    const net = valueFreed - cost;
+    const roi = Math.round((net / cost) * 100);
+
+    $('hourlyRateVal').textContent = `$${rate}/hr`;
+    $('adminHoursVal').textContent = `${hours} hrs`;
+    $('vaCostVal').textContent = `$${cost.toLocaleString()}/mo`;
+    $('timeReclaimed').textContent = `${Math.round(weeklyHours)} hrs/mo`;
+    $('valueFreed').textContent = fmt(valueFreed) + '/mo';
+    $('vaCostDisplay').textContent = `-$${cost.toLocaleString()}/mo`;
+    $('netRoi').innerHTML = `${fmt(net)}/mo <span class="badge${net < 0 ? ' negative' : ''}">${net >= 0 ? '+' : ''}${roi}% ROI</span>`;
+  }
+
+  ['hourlyRate','adminHours','vaCost'].forEach(id => $(id).addEventListener('input', calc));
+  calc();
+</script>
+</body>
+</html>
