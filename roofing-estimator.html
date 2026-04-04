@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roofing Job Estimator — Taylor Intelligence</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--accent:#4f46e5;--ink:#0f0f0f;--muted:#666;--bg:#f9f9f9;--card:#fff}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  .wrap{max-width:600px;margin:0 auto;padding:40px 20px 60px}
+  .eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h1{font-size:1.9rem;font-weight:800;line-height:1.2;margin-bottom:8px}
+  .sub{color:var(--muted);font-size:.95rem;margin-bottom:32px;line-height:1.6}
+  .card{background:var(--card);border:1.5px solid #ebebeb;border-radius:14px;padding:24px;margin-bottom:16px}
+  .card h2{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#aaa;margin-bottom:18px}
+  .field{margin-bottom:16px}
+  label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px}
+  input,select{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:.95rem;background:#fff;color:var(--ink);outline:none;transition:border-color .15s}
+  input:focus,select:focus{border-color:var(--accent)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  button{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px;transition:opacity .15s}
+  button:hover{opacity:.88}
+  #results{display:none}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0}
+  .stat{background:#f4f3ff;border-radius:10px;padding:16px}
+  .stat-label{font-size:.75rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .stat-val{font-size:1.4rem;font-weight:800}
+  .line-items{margin-top:16px}
+  .li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:.9rem}
+  .li:last-child{border:none;font-weight:700;font-size:.95rem}
+  .tip{margin-top:16px;font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5}
+  .tip a{color:var(--accent);text-decoration:none;font-weight:600}
+  @media(max-width:420px){.row,.result-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Taylor Intelligence · Free Tool</p>
+  <h1>Roofing Job Estimator</h1>
+  <p class="sub">Quickly estimate material costs, labor, and total job price for asphalt shingle roofs. Adjust margins to match your market.</p>
+
+  <div class="card">
+    <h2>Roof Details</h2>
+    <div class="row">
+      <div class="field">
+        <label>Roof Area (sq ft)</label>
+        <input type="number" id="sqft" placeholder="e.g. 1800" min="100" max="20000">
+      </div>
+      <div class="field">
+        <label>Roof Pitch</label>
+        <select id="pitch">
+          <option value="1.00">Flat / Low (0–3/12)</option>
+          <option value="1.10">Moderate (4–6/12)</option>
+          <option value="1.20" selected>Standard (7–9/12)</option>
+          <option value="1.35">Steep (10–12/12)</option>
+          <option value="1.50">Very Steep (12+/12)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Shingle Grade</label>
+        <select id="grade">
+          <option value="85">3-Tab (~$85/sq)</option>
+          <option value="110" selected>Architectural (~$110/sq)</option>
+          <option value="160">Designer / Impact (~$160/sq)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Layers to Remove</label>
+        <select id="layers">
+          <option value="0">New build (0)</option>
+          <option value="1" selected>1 layer</option>
+          <option value="2">2 layers</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Labor Rate ($/sq)</label>
+        <input type="number" id="labor" placeholder="e.g. 150" value="150" min="50" max="600">
+      </div>
+      <div class="field">
+        <label>Your Margin (%)</label>
+        <input type="number" id="margin" placeholder="e.g. 30" value="30" min="0" max="80">
+      </div>
+    </div>
+    <button onclick="estimate()">Calculate Estimate</button>
+  </div>
+
+  <div class="card" id="results">
+    <h2>Your Estimate</h2>
+    <div class="result-grid">
+      <div class="stat"><div class="stat-label">Roof Squares</div><div class="stat-val" id="r-squares">—</div></div>
+      <div class="stat"><div class="stat-label">Total Job Price</div><div class="stat-val" id="r-total">—</div></div>
+    </div>
+    <div class="line-items">
+      <div class="li"><span>Materials (shingles + underlayment + misc)</span><span id="r-materials">—</span></div>
+      <div class="li"><span>Tear-off</span><span id="r-tearoff">—</span></div>
+      <div class="li"><span>Labor</span><span id="r-labor">—</span></div>
+      <div class="li"><span>Subtotal (cost)</span><span id="r-subtotal">—</span></div>
+      <div class="li"><span>Your Margin (<span id="r-marginpct">—</span>%)</span><span id="r-profit">—</span></div>
+      <div class="li"><span>💰 Quote to Customer</span><span id="r-total2">—</span></div>
+    </div>
+    <p class="tip">Want a system that generates quotes, sends follow-ups, and books jobs automatically? <a href="https://www.linkedin.com/in/theo-taylor-b06b962b3/" target="_blank">DM Theo on LinkedIn</a> — Taylor Intelligence builds these for roofing companies.</p>
+  </div>
+</div>
+<script>
+function fmt(n){return '$'+Math.round(n).toLocaleString()}
+function estimate(){
+  const sqft=parseFloat(document.getElementById('sqft').value)||0;
+  const pitch=parseFloat(document.getElementById('pitch').value);
+  const grade=parseFloat(document.getElementById('grade').value);
+  const layers=parseInt(document.getElementById('layers').value);
+  const laborRate=parseFloat(document.getElementById('labor').value)||150;
+  const marginPct=parseFloat(document.getElementById('margin').value)||30;
+  if(sqft<100){alert('Please enter a valid roof area.');return;}
+  const squares=(sqft/100)*pitch;
+  const materialCost=squares*(grade*1.15);
+  const tearoff=layers*squares*40;
+  const laborCost=squares*laborRate;
+  const subtotal=materialCost+tearoff+laborCost;
+  const profit=subtotal*(marginPct/100);
+  const total=subtotal+profit;
+  document.getElementById('r-squares').textContent=squares.toFixed(1)+' sq';
+  document.getElementById('r-materials').textContent=fmt(materialCost);
+  document.getElementById('r-tearoff').textContent=layers===0?'$0':fmt(tearoff);
+  document.getElementById('r-labor').textContent=fmt(laborCost);
+  document.getElementById('r-subtotal').textContent=fmt(subtotal);
+  document.getElementById('r-marginpct').textContent=marginPct;
+  document.getElementById('r-profit').textContent=fmt(profit);
+  document.getElementById('r-total').textContent=fmt(total);
+  document.getElementById('r-total2').textContent=fmt(total);
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
