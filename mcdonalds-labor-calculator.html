@@ -3,129 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>McDonald's Labor Cost Calculator</title>
+<title>McDonald's Franchise Dashboard — Taylor Intelligence</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff8f0; color: #1a1a1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; max-width: 520px; width: 100%; }
-  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .arc { font-size: 2rem; line-height: 1; }
-  h1 { font-size: 1.3rem; font-weight: 700; }
-  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 28px; }
-  .section { margin-bottom: 24px; }
-  .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #DA291C; margin-bottom: 12px; }
-  .field { margin-bottom: 14px; }
-  label { display: block; font-size: 0.8rem; color: #555; margin-bottom: 4px; }
-  .row { display: flex; gap: 10px; align-items: center; }
-  input[type=range] { flex: 1; accent-color: #DA291C; cursor: pointer; }
-  .val { font-weight: 700; color: #DA291C; min-width: 80px; text-align: right; font-size: 0.95rem; }
-  hr { border: none; border-top: 1px solid #f0f0f0; margin: 24px 0; }
-  .results { background: #fff8f0; border-radius: 12px; padding: 22px; }
-  .results-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 16px; }
-  .metric { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.9rem; }
-  .metric .label { color: #555; }
-  .metric .amount { font-weight: 700; }
-  .metric.big { padding-top: 12px; border-top: 1px solid #ffe0cc; margin-top: 4px; }
-  .metric.big .label { font-weight: 600; color: #1a1a1a; }
-  .metric.big .amount { font-size: 1.25rem; color: #DA291C; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
-  .badge.red { background: #fee2e2; color: #dc2626; }
-  .badge.green { background: #dcfce7; color: #16a34a; }
-  .tip { background: #FFC72C22; border-left: 3px solid #FFC72C; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #555; margin-top: 16px; line-height: 1.5; }
-  footer { text-align: center; margin-top: 22px; font-size: 0.72rem; color: #ccc; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --ink: #1a1a1a; --accent: #DA291C; --gold: #FFC72C; --muted: #6b7280; --border: #e5e7eb; --bg: #fafafa; --white: #fff; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; min-height: 100vh; padding: 0 0 60px; }
+  header { background: var(--ink); color: var(--white); padding: 28px 32px 24px; margin-bottom: 32px; }
+  .header-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .header-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+  .header-sub { font-size: 0.8rem; color: #9ca3af; margin-top: 2px; }
+  .header-badge { background: var(--accent); color: var(--white); font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .tabs { max-width: 960px; margin: 0 auto 28px; padding: 0 24px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab { padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .panel { display: none; max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  .panel.active { display: block; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 24px; }
+  .card-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 18px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 0.82rem; color: var(--ink); margin-bottom: 5px; font-weight: 500; }
+  .slider-row { display: flex; gap: 10px; align-items: center; }
+  input[type=range] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+  .val { font-weight: 700; color: var(--accent); min-width: 90px; text-align: right; font-size: 0.92rem; }
+  .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 4px; }
+  .stat { background: var(--bg); border-radius: 10px; padding: 16px; }
+  .stat-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--ink); }
+  .stat-value.red { color: var(--accent); }
+  .stat-value.green { color: #16a34a; }
+  .insight { background: #fff7ed; border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 0.83rem; color: #92400e; line-height: 1.6; margin-top: 16px; }
+  .full-width { grid-column: 1 / -1; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .footer-note { text-align: center; font-size: 0.75rem; color: var(--muted); margin-top: 32px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .results-grid { grid-template-columns: 1fr 1fr; } header { padding: 20px; } }
 </style>
 </head>
 <body>
-<div class="card">
-  <div class="logo"><span class="arc">🍟</span><div><h1>Labor Cost Calculator</h1></div></div>
-  <p class="subtitle">McDonald's franchise — per location, per week</p>
 
-  <div class="section">
-    <div class="section-title">Crew</div>
-    <div class="field">
-      <label>Crew members per shift</label>
-      <div class="row"><input type="range" id="crewPerShift" min="3" max="20" value="8"><span class="val" id="crewPerShiftVal">8</span></div>
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-title">🍟 Franchise Operations Dashboard</div>
+      <div class="header-sub">McDonald's — Multi-Location Analysis Tool</div>
     </div>
-    <div class="field">
-      <label>Shifts per day</label>
-      <div class="row"><input type="range" id="shiftsPerDay" min="1" max="4" value="3"><span class="val" id="shiftsPerDayVal">3</span></div>
-    </div>
-    <div class="field">
-      <label>Avg hours per shift</label>
-      <div class="row"><input type="range" id="shiftHours" min="4" max="10" value="8"><span class="val" id="shiftHoursVal">8 hrs</span></div>
-    </div>
+    <div class="header-badge">Taylor Intelligence</div>
   </div>
+</header>
 
-  <div class="section">
-    <div class="section-title">Pay & Turnover</div>
-    <div class="field">
-      <label>Average hourly wage</label>
-      <div class="row"><input type="range" id="wage" min="17" max="35" value="20" step="0.5"><span class="val" id="wageVal">$20/hr</span></div>
-    </div>
-    <div class="field">
-      <label>Annual turnover rate</label>
-      <div class="row"><input type="range" id="turnover" min="20" max="200" value="100" step="5"><span class="val" id="turnoverVal">100%</span></div>
-    </div>
-    <div class="field">
-      <label>Cost to replace one employee</label>
-      <div class="row"><input type="range" id="replaceCost" min="500" max="5000" value="2000" step="100"><span class="val" id="replaceCostVal">$2,000</span></div>
-    </div>
-  </div>
-
-  <hr>
-
-  <div class="results">
-    <div class="results-title">Weekly Snapshot</div>
-    <div class="metric"><span class="label">Total crew hours/week</span><span class="amount" id="totalHours">—</span></div>
-    <div class="metric"><span class="label">Gross labor cost/week</span><span class="amount" id="laborCost">—</span></div>
-    <div class="metric"><span class="label">Turnover cost/week</span><span class="amount" id="turnoverCost">—</span></div>
-    <div class="metric big">
-      <span class="label">Total weekly labor burden</span>
-      <span class="amount" id="totalBurden">—</span>
-    </div>
-    <div class="tip" id="tip">Loading insight...</div>
-  </div>
-  <footer>Built by Taylor Intelligence · For franchise operators</footer>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('labor')">Labor & Turnover</div>
+  <div class="tab" onclick="showTab('revenue')">Revenue & Targets</div>
+  <div class="tab" onclick="showTab('scheduling')">Scheduling ROI</div>
 </div>
 
+<!-- TAB 1: LABOR -->
+<div class="panel active" id="tab-labor">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Crew Configuration</div>
+      <div class="field"><label>Crew members per shift</label><div class="slider-row"><input type="range" id="crew" min="3" max="25" value="8"><span class="val" id="crewV">8</span></div></div>
+      <div class="field"><label>Shifts per day</label><div class="slider-row"><input type="range" id="shifts" min="1" max="4" value="3"><span class="val" id="shiftsV">3</span></div></div>
+      <div class="field"><label>Avg hours per shift</label><div class="slider-row"><input type="range" id="shiftHrs" min="4" max="10" value="8"><span class="val" id="shiftHrsV">8 hrs</span></div></div>
+      <div class="field"><label>Number of locations</label><div class="slider-row"><input type="range" id="locations" min="1" max="20" value="3"><span class="val" id="locationsV">3</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pay & Turnover</div>
+      <div class="field"><label>Average hourly wage</label><div class="slider-row"><input type="range" id="wage" min="17" max="35" value="20" step="0.5"><span class="val" id="wageV">$20/hr</span></div></div>
+      <div class="field"><label>Annual turnover rate</label><div class="slider-row"><input type="range" id="turnover" min="20" max="200" value="100" step="5"><span class="val" id="turnoverV">100%</span></div></div>
+      <div class="field"><label>Cost to replace one employee</label><div class="slider-row"><input type="range" id="replace" min="500" max="6000" value="2000" step="100"><span class="val" id="replaceV">$2,000</span></div></div>
+      <div class="field"><label>Overtime hours/week (per location)</label><div class="slider-row"><input type="range" id="overtime" min="0" max="80" value="10"><span class="val" id="overtimeV">10 hrs</span></div></div>
+    </div>
+    <div class="card full-width">
+      <div class="card-title">Weekly Results — All Locations</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">Total crew hours</div><div class="stat-value" id="totalHrs">—</div></div>
+        <div class="stat"><div class="stat-label">Gross labor cost</div><div class="stat-value red" id="laborCost">—</div></div>
+        <div class="stat"><div class="stat-label">Overtime cost</div><div class="stat-value red" id="otCost">—</div></div>
+        <div class="stat"><div class="stat-label">Turnover cost</div><div class="stat-value red" id="turnCost">—</div></div>
+        <div class="stat"><div class="stat-label">Total weekly burden</div><div class="stat-value red" id="totalBurden">—</div></div>
+        <div class="stat"><div class="stat-label">Annual labor cost</div><div class="stat-value" id="annualCost">—</div></div>
+      </div>
+      <div class="insight" id="laborInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: REVENUE -->
+<div class="panel" id="tab-revenue">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Revenue Inputs</div>
+      <div class="field"><label>Avg daily revenue per location</label><div class="slider-row"><input type="range" id="dailyRev" min="2000" max="25000" value="8000" step="500"><span class="val" id="dailyRevV">$8,000</span></div></div>
+      <div class="field"><label>Number of locations</label><div class="slider-row"><input type="range" id="revLocations" min="1" max="20" value="3"><span class="val" id="revLocationsV">3</span></div></div>
+      <div class="field"><label>Target food cost %</label><div class="slider-row"><input type="range" id="foodCostPct" min="25" max="40" value="31" step="0.5"><span class="val" id="foodCostPctV">31%</span></div></div>
+      <div class="field"><label>Target labor cost %</label><div class="slider-row"><input type="range" id="laborPct" min="20" max="40" value="30" step="0.5"><span class="val" id="laborPctV">30%</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Revenue Results</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">Weekly revenue</div><div class="stat-value green" id="weeklyRev">—</div></div>
+        <div class="stat"><div class="stat-label">Monthly revenue</div><div class="stat-value green" id="monthlyRev">—</div></div>
+        <div class="stat"><div class="stat-label">Annual revenue</div><div class="stat-value green" id="annualRev">—</div></div>
+        <div class="stat"><div class="stat-label">Food cost budget/wk</div><div class="stat-value red" id="foodBudget">—</div></div>
+        <div class="stat"><div class="stat-label">Labor budget/wk</div><div class="stat-value red" id="laborBudget">—</div></div>
+        <div class="stat"><div class="stat-label">Combined prime cost</div><div class="stat-value" id="primeCost">—</div></div>
+      </div>
+      <div class="insight" id="revInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: SCHEDULING ROI -->
+<div class="panel" id="tab-scheduling">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Scheduling Waste Inputs</div>
+      <div class="field"><label>Hours/wk lost to overstaffing (per location)</label><div class="slider-row"><input type="range" id="overstaff" min="0" max="40" value="12"><span class="val" id="overstaffV">12 hrs</span></div></div>
+      <div class="field"><label>Manager hours/wk spent on scheduling</label><div class="slider-row"><input type="range" id="mgrHrs" min="1" max="20" value="6"><span class="val" id="mgrHrsV">6 hrs</span></div></div>
+      <div class="field"><label>Manager hourly rate</label><div class="slider-row"><input type="range" id="mgrWage" min="18" max="50" value="28"><span class="val" id="mgrWageV">$28/hr</span></div></div>
+      <div class="field"><label>Avg no-show / late callouts per week</label><div class="slider-row"><input type="range" id="callouts" min="0" max="20" value="4"><span class="val" id="calloutsV">4</span></div></div>
+      <div class="field"><label>Locations</label><div class="slider-row"><input type="range" id="schedLocations" min="1" max="20" value="3"><span class="val" id="schedLocationsV">3</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Scheduling ROI Results</div>
+      <div class="results-grid">
+        <div class="stat"><div class="stat-label">Wasted labor/wk</div><div class="stat-value red" id="wastedLabor">—</div></div>
+        <div class="stat"><div class="stat-label">Mgr scheduling cost/wk</div><div class="stat-value red" id="mgrSchedCost">—</div></div>
+        <div class="stat"><div class="stat-label">Callout cost/wk</div><div class="stat-value red" id="calloutCost">—</div></div>
+        <div class="stat"><div class="stat-label">Total waste/wk</div><div class="stat-value red" id="totalWaste">—</div></div>
+        <div class="stat"><div class="stat-label">Annual waste</div><div class="stat-value red" id="annualWaste">—</div></div>
+        <div class="stat"><div class="stat-label">Savings w/ 50% reduction</div><div class="stat-value green" id="savings50">—</div></div>
+      </div>
+      <div class="insight" id="schedInsight">—</div>
+    </div>
+  </div>
+</div>
+
+<p class="footer-note">Built by Taylor Intelligence · theotaylorintelligence.ca</p>
+
 <script>
-  const $ = id => document.getElementById(id);
-  const fmt = n => '$' + Math.round(n).toLocaleString();
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
 
-  function calc() {
-    const crew = +$('crewPerShift').value;
-    const shifts = +$('shiftsPerDay').value;
-    const hours = +$('shiftHours').value;
-    const wage = +$('wage').value;
-    const turnover = +$('turnover').value / 100;
-    const replace = +$('replaceCost').value;
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  $('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
 
-    const totalHours = crew * shifts * hours * 7;
-    const laborCost = totalHours * wage;
-    const totalCrew = crew * shifts;
-    const annualReplacements = totalCrew * turnover;
-    const weeklyTurnover = (annualReplacements * replace) / 52;
-    const total = laborCost + weeklyTurnover;
-    const annualTotal = total * 52;
+function calcLabor() {
+  const crew = +$('crew').value, shifts = +$('shifts').value, shiftHrs = +$('shiftHrs').value;
+  const locs = +$('locations').value, wage = +$('wage').value;
+  const turnover = +$('turnover').value / 100, replace = +$('replace').value, ot = +$('overtime').value;
+  $('crewV').textContent = crew; $('shiftsV').textContent = shifts;
+  $('shiftHrsV').textContent = shiftHrs + ' hrs'; $('locationsV').textContent = locs;
+  $('wageV').textContent = '$' + wage + '/hr'; $('turnoverV').textContent = turnover * 100 + '%';
+  $('replaceV').textContent = fmt(replace); $('overtimeV').textContent = ot + ' hrs';
+  const weeklyHrs = crew * shifts * shiftHrs * 7 * locs;
+  const laborCost = weeklyHrs * wage;
+  const otCost = ot * locs * wage * 0.5 * 7;
+  const totalCrew = crew * shifts * locs;
+  const annualRepl = totalCrew * turnover;
+  const weeklyTurn = (annualRepl * replace) / 52;
+  const total = laborCost + otCost + weeklyTurn;
+  $('totalHrs').textContent = weeklyHrs.toLocaleString() + ' hrs';
+  $('laborCost').textContent = fmt(laborCost) + '/wk';
+  $('otCost').textContent = fmt(otCost) + '/wk';
+  $('turnCost').textContent = fmt(weeklyTurn) + '/wk';
+  $('totalBurden').textContent = fmt(total) + '/wk';
+  $('annualCost').textContent = fmt(total * 52) + '/yr';
+  const turnPct = Math.round((weeklyTurn / total) * 100);
+  $('laborInsight').innerHTML = `Turnover alone costs <strong>${fmt(annualRepl * replace)}/year</strong> across ${locs} location${locs > 1 ? 's' : ''}. That's <strong>${turnPct}% of your total labor burden</strong>. A 20% reduction in turnover saves <strong>${fmt(annualRepl * replace * 0.2)}/year</strong>.`;
+}
 
-    $('crewPerShiftVal').textContent = crew;
-    $('shiftsPerDayVal').textContent = shifts;
-    $('shiftHoursVal').textContent = hours + ' hrs';
-    $('wageVal').textContent = '$' + wage + '/hr';
-    $('turnoverVal').textContent = turnover * 100 + '%';
-    $('replaceCostVal').textContent = fmt(replace);
+function calcRevenue() {
+  const daily = +$('dailyRev').value, locs = +$('revLocations').value;
+  const foodPct = +$('foodCostPct').value / 100, laborPct = +$('laborPct').value / 100;
+  $('dailyRevV').textContent = fmt(daily); $('revLocationsV').textContent = locs;
+  $('foodCostPctV').textContent = Math.round(foodPct * 100) + '%'; $('laborPctV').textContent = Math.round(laborPct * 100) + '%';
+  const weekly = daily * 7 * locs;
+  const monthly = daily * 30.4 * locs;
+  const annual = daily * 365 * locs;
+  $('weeklyRev').textContent = fmt(weekly);
+  $('monthlyRev').textContent = fmt(monthly);
+  $('annualRev').textContent = fmt(annual);
+  $('foodBudget').textContent = fmt(weekly * foodPct) + '/wk';
+  $('laborBudget').textContent = fmt(weekly * laborPct) + '/wk';
+  const prime = Math.round((foodPct + laborPct) * 100);
+  $('primeCost').textContent = prime + '% (' + (prime <= 62 ? '✅ healthy' : '⚠️ high') + ')';
+  $('revInsight').innerHTML = `At <strong>${fmt(daily)}/day per location</strong>, your operation generates <strong>${fmt(annual)}/year</strong>. Prime cost at ${prime}% is ${prime <= 62 ? 'within the healthy 55–62% range' : 'above the 62% target — consider where to trim'}. Every 1% improvement in prime cost = <strong>${fmt(annual * 0.01)}/year</strong>.`;
+}
 
-    $('totalHours').textContent = totalHours.toLocaleString() + ' hrs';
-    $('laborCost').textContent = fmt(laborCost) + '/wk';
-    $('turnoverCost').textContent = fmt(weeklyTurnover) + '/wk';
-    $('totalBurden').textContent = fmt(total) + '/wk';
+function calcScheduling() {
+  const overstaff = +$('overstaff').value, mgrHrs = +$('mgrHrs').value, mgrWage = +$('mgrWage').value;
+  const callouts = +$('callouts').value, locs = +$('schedLocations').value;
+  $('overstaffV').textContent = overstaff + ' hrs'; $('mgrHrsV').textContent = mgrHrs + ' hrs';
+  $('mgrWageV').textContent = '$' + mgrWage + '/hr'; $('calloutsV').textContent = callouts;
+  $('schedLocationsV').textContent = locs;
+  const avgWage = 20;
+  const wastedLabor = overstaff * avgWage * locs;
+  const mgrCost = mgrHrs * mgrWage * locs;
+  const calloutCost = callouts * avgWage * 2 * locs;
+  const total = wastedLabor + mgrCost + calloutCost;
+  const annual = total * 52;
+  $('wastedLabor').textContent = fmt(wastedLabor) + '/wk';
+  $('mgrSchedCost').textContent = fmt(mgrCost) + '/wk';
+  $('calloutCost').textContent = fmt(calloutCost) + '/wk';
+  $('totalWaste').textContent = fmt(total) + '/wk';
+  $('annualWaste').textContent = fmt(annual) + '/yr';
+  $('savings50').textContent = fmt(annual * 0.5) + '/yr';
+  $('schedInsight').innerHTML = `Scheduling inefficiency costs <strong>${fmt(annual)}/year</strong> across ${locs} location${locs > 1 ? 's' : ''}. Better scheduling software or AI-assisted rostering could recover <strong>${fmt(annual * 0.5)}–${fmt(annual * 0.7)}/year</strong> — with zero headcount changes.`;
+}
 
-    const pct = Math.round((weeklyTurnover / total) * 100);
-    $('tip').innerHTML = `📊 Turnover is eating <strong>${pct}% of your labor budget</strong> — that's <strong>${fmt(annualReplacements * replace)}/year</strong> just in replacement costs. Reducing turnover 20% saves <strong>${fmt(annualReplacements * replace * 0.2)}/year</strong> per location.`;
-  }
-
-  ['crewPerShift','shiftsPerDay','shiftHours','wage','turnover','replaceCost'].forEach(id => $(id).addEventListener('input', calc));
-  calc();
+['crew','shifts','shiftHrs','locations','wage','turnover','replace','overtime'].forEach(id => $(id).addEventListener('input', calcLabor));
+['dailyRev','revLocations','foodCostPct','laborPct'].forEach(id => $(id).addEventListener('input', calcRevenue));
+['overstaff','mgrHrs','mgrWage','callouts','schedLocations'].forEach(id => $(id).addEventListener('input', calcScheduling));
+calcLabor(); calcRevenue(); calcScheduling();
 </script>
 </body>
 </html>
