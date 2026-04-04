@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dental No-Show Cost Calculator | Taylor Intelligence</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; max-width: 540px; width: 100%; }
+    .badge { display: inline-block; background: #ebf4ff; color: #2b6cb0; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 800; color: #1a202c; margin-bottom: 6px; }
+    .subtitle { color: #718096; font-size: 14px; margin-bottom: 32px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 6px; margin-top: 20px; }
+    input[type="number"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; transition: border-color .2s; }
+    input[type="number"]:focus { border-color: #3182ce; }
+    .calc-btn { margin-top: 28px; width: 100%; padding: 14px; background: #3182ce; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .calc-btn:hover { background: #2563eb; }
+    .results { margin-top: 28px; background: #ebf8ff; border-radius: 12px; padding: 24px; display: none; }
+    .results.show { display: block; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #bee3f8; }
+    .result-row:last-child { border-bottom: none; font-weight: 800; font-size: 17px; color: #1a365d; }
+    .result-label { font-size: 14px; color: #2c5282; }
+    .result-value { font-size: 15px; font-weight: 700; color: #1a365d; }
+    .fix-box { margin-top: 20px; background: #fff5f5; border-left: 4px solid #fc8181; border-radius: 8px; padding: 16px; font-size: 13px; color: #742a2a; line-height: 1.6; }
+    .fix-box strong { display: block; margin-bottom: 6px; color: #c53030; font-size: 14px; }
+    .footer { margin-top: 28px; font-size: 12px; color: #a0aec0; text-align: center; }
+    .footer a { color: #3182ce; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Free Tool — Taylor Intelligence</span>
+  <h1>Dental No-Show Cost Calculator</h1>
+  <p class="subtitle">Find out exactly how much patient no-shows are costing your practice each year — and what one automated reminder system could recover.</p>
+
+  <label for="weekly_apts">Appointments per week</label>
+  <input type="number" id="weekly_apts" placeholder="e.g. 80" min="1" />
+
+  <label for="noshow_rate">Average no-show / cancellation rate (%)</label>
+  <input type="number" id="noshow_rate" placeholder="e.g. 12" min="0" max="100" />
+
+  <label for="avg_value">Average appointment value ($)</label>
+  <input type="number" id="avg_value" placeholder="e.g. 280" min="1" />
+
+  <label for="overhead_pct">Overhead rate (% of revenue) — overhead you still pay even when the chair is empty</label>
+  <input type="number" id="overhead_pct" placeholder="e.g. 65" min="0" max="100" />
+
+  <button class="calc-btn" onclick="calculate()">Calculate My Loss →</button>
+
+  <div class="results" id="results">
+    <div class="result-row">
+      <span class="result-label">No-shows per week</span>
+      <span class="result-value" id="r_weekly"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Lost revenue per week</span>
+      <span class="result-value" id="r_weekly_rev"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Sunk overhead per week (chair empty, bills running)</span>
+      <span class="result-value" id="r_overhead"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Lost revenue per year</span>
+      <span class="result-value" id="r_annual_rev"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">💡 Recoverable with 40% fill-rate improvement</span>
+      <span class="result-value" id="r_recoverable"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">🚨 True annual cost (revenue + overhead)</span>
+      <span class="result-value" id="r_total"></span>
+    </div>
+    <div class="fix-box">
+      <strong>What a simple AI reminder system fixes</strong>
+      An automated appointment reminder + confirmation workflow typically reduces no-shows by 40–60%. At your numbers, that's <span id="r_fix_range"></span>/year recovered — often for less than $200/month in automation.
+    </div>
+  </div>
+
+  <p class="footer">Built by <a href="https://theot865-hub.github.io" target="_blank">Taylor Intelligence</a> · Free tools for small business owners</p>
+</div>
+<script>
+  function fmt(n) { return "$" + Math.round(n).toLocaleString(); }
+  function calculate() {
+    const apts = parseFloat(document.getElementById("weekly_apts").value);
+    const rate = parseFloat(document.getElementById("noshow_rate").value) / 100;
+    const val  = parseFloat(document.getElementById("avg_value").value);
+    const ovh  = parseFloat(document.getElementById("overhead_pct").value) / 100;
+    if ([apts, rate, val, ovh].some(isNaN) || apts <= 0 || val <= 0) {
+      alert("Please fill in all fields with valid numbers.");
+      return;
+    }
+    const ns_week   = apts * rate;
+    const rev_week  = ns_week * val;
+    const ovh_week  = rev_week * ovh;
+    const rev_year  = rev_week * 52;
+    const ovh_year  = ovh_week * 52;
+    const total     = rev_year + ovh_year;
+    const recov     = rev_year * 0.4;
+    const recov_hi  = rev_year * 0.6;
+    document.getElementById("r_weekly").textContent       = ns_week.toFixed(1);
+    document.getElementById("r_weekly_rev").textContent   = fmt(rev_week);
+    document.getElementById("r_overhead").textContent     = fmt(ovh_week);
+    document.getElementById("r_annual_rev").textContent   = fmt(rev_year);
+    document.getElementById("r_recoverable").textContent  = fmt(recov);
+    document.getElementById("r_total").textContent        = fmt(total);
+    document.getElementById("r_fix_range").textContent    = fmt(recov) + "–" + fmt(recov_hi);
+    document.getElementById("results").classList.add("show");
+  }
+</script>
+</body>
+</html>
