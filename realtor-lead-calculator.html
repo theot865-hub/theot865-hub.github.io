@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realtor Lead Response ROI Calculator | Taylor Intelligence</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f7fb;color:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .card{background:#fff;border-radius:18px;box-shadow:0 4px 32px rgba(91,79,255,.10);max-width:520px;width:100%;padding:40px 36px}
+  .badge{display:inline-block;background:#ede9ff;color:#5b4fff;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:20px;margin-bottom:16px}
+  h1{font-size:1.45rem;font-weight:800;line-height:1.3;margin-bottom:6px}
+  .sub{font-size:.88rem;color:#6b7280;margin-bottom:28px;line-height:1.6}
+  .field{margin-bottom:20px}
+  label{display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:6px}
+  .row{display:flex;align-items:center;gap:12px}
+  input[type=range]{flex:1;accent-color:#5b4fff;cursor:pointer}
+  .val{font-size:.95rem;font-weight:700;color:#5b4fff;min-width:72px;text-align:right}
+  .results{background:#f3f0ff;border-radius:12px;padding:22px;margin-top:28px}
+  .results h2{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#5b4fff;margin-bottom:14px}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8e3ff}
+  .stat:last-child{border:none}
+  .stat-label{font-size:.85rem;color:#374151}
+  .stat-value{font-size:1rem;font-weight:800;color:#1a1a2e}
+  .stat-value.green{color:#059669}
+  .stat-value.red{color:#dc2626}
+  .cta{display:block;margin-top:24px;background:#5b4fff;color:#fff;text-align:center;border-radius:10px;padding:14px;font-weight:700;font-size:.9rem;text-decoration:none;transition:background .2s}
+  .cta:hover{background:#4338ca}
+  .footer{font-size:.72rem;color:#9ca3af;text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Realtor Tool — Taylor Intelligence</span>
+  <h1>Lead Response ROI Calculator</h1>
+  <p class="sub">Studies show 78% of buyers go with the first agent who responds. See exactly what slow follow-up is costing you — and what automating it recovers.</p>
+
+  <div class="field">
+    <label>Average home sale price</label>
+    <div class="row">
+      <input type="range" id="price" min="200000" max="2000000" step="50000" value="750000">
+      <span class="val" id="priceVal">$750K</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>New leads per month</label>
+    <div class="row">
+      <input type="range" id="leads" min="5" max="100" step="5" value="20">
+      <span class="val" id="leadsVal">20</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>Current close rate (%)</label>
+    <div class="row">
+      <input type="range" id="close" min="2" max="30" step="1" value="8">
+      <span class="val" id="closeVal">8%</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>Avg. response time to new leads</label>
+    <div class="row">
+      <input type="range" id="response" min="1" max="48" step="1" value="12">
+      <span class="val" id="responseVal">12 hrs</span>
+    </div>
+  </div>
+
+  <div class="results">
+    <h2>Your numbers</h2>
+    <div class="stat"><span class="stat-label">Deals closed / month</span><span class="stat-value" id="dealsNow">—</span></div>
+    <div class="stat"><span class="stat-label">Leads lost to slow response</span><span class="stat-value red" id="leadsLost">—</span></div>
+    <div class="stat"><span class="stat-label">Annual revenue lost</span><span class="stat-value red" id="revLost">—</span></div>
+    <div class="stat"><span class="stat-label">Revenue recovered w/ instant follow-up</span><span class="stat-value green" id="revGained">—</span></div>
+  </div>
+
+  <a class="cta" href="https://www.linkedin.com/in/theo-taylor-ai" target="_blank">DM Theo on LinkedIn — automate your follow-up →</a>
+  <p class="footer">Built by <strong>Taylor Intelligence</strong> · theot865-hub.github.io · Free tool, no sign-up</p>
+</div>
+
+<script>
+  const fmt = n => n >= 1e6 ? '$' + (n/1e6).toFixed(2) + 'M' : n >= 1e3 ? '$' + Math.round(n/1e3) + 'K' : '$' + n;
+  function calc() {
+    const price = +document.getElementById('price').value;
+    const leads = +document.getElementById('leads').value;
+    const closeRate = +document.getElementById('close').value / 100;
+    const hrs = +document.getElementById('response').value;
+    document.getElementById('priceVal').textContent = fmt(price);
+    document.getElementById('leadsVal').textContent = leads;
+    document.getElementById('closeVal').textContent = document.getElementById('close').value + '%';
+    document.getElementById('responseVal').textContent = hrs === 1 ? '1 hr' : hrs + ' hrs';
+    // Leads lost increases with response time (studies: >5min = 80% lost, >1hr = 87% lost)
+    const lostFactor = Math.min(0.95, 0.55 + (hrs / 48) * 0.4);
+    const leadsLost = Math.round(leads * lostFactor);
+    const dealsNow = (leads * (1 - lostFactor) * closeRate).toFixed(1);
+    const commission = price * 0.025; // avg buyer agent commission ~2.5%
+    const annualLost = leadsLost * closeRate * commission * 12;
+    const annualGained = leadsLost * closeRate * commission * 12 * 0.6; // recover ~60% with instant AI follow-up
+    document.getElementById('dealsNow').textContent = dealsNow;
+    document.getElementById('leadsLost').textContent = leadsLost + '/mo';
+    document.getElementById('revLost').textContent = fmt(Math.round(annualLost)) + '/yr';
+    document.getElementById('revGained').textContent = '+' + fmt(Math.round(annualGained)) + '/yr';
+  }
+  document.querySelectorAll('input').forEach(el => el.addEventListener('input', calc));
+  calc();
+</script>
+</body>
+</html>
