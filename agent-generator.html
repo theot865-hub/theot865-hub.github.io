@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Ideas — Taylor Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.18);
+    --text: #f0ede8;
+    --muted: #888;
+    --accent: #c8f57a;
+    --accent-dim: rgba(200,245,122,0.12);
+    --accent-dim2: rgba(200,245,122,0.06);
+    --red: #ff6b6b;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 24px 80px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .brand {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .headline {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(36px, 6vw, 58px);
+    line-height: 1.08;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .headline em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subline {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-top: 4px;
+    max-width: 480px;
+  }
+
+  /* Input area */
+  .input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .input-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .textarea-wrap {
+    position: relative;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.7;
+    padding: 20px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea::placeholder { color: #444; }
+  textarea:focus { border-color: var(--border-hover); }
+
+  .char-count {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-size: 11px;
+    color: #333;
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  /* Examples */
+  .examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .example-chip {
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .example-chip:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+    background: var(--surface2);
+  }
+
+  /* Button */
+  .generate-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: #0e0e0e;
+    border: none;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .generate-btn:hover:not(:disabled) {
+    background: #d4f985;
+    transform: translateY(-1px);
+  }
+
+  .generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-icon { font-size: 16px; transition: transform 0.3s; }
+  .generate-btn:not(:disabled):hover .btn-icon { transform: rotate(15deg); }
+
+  /* Loading */
+  .loading {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 0;
+  }
+
+  .loading.visible { display: flex; }
+
+  .loader-bar {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1px;
+  }
+
+  .loader-bar::after {
+    content: '';
+    position: absolute;
+    left: -40%;
+    top: 0;
+    width: 40%;
+    height: 100%;
+    background: var(--accent);
+    animation: slide 1.2s ease-in-out infinite;
+  }
+
+  @keyframes slide {
+    0% { left: -40%; }
+    100% { left: 100%; }
+  }
+
+  .loading-text {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .results.visible { display: flex; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .reset-btn {
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em;
+    transition: color 0.15s;
+  }
+
+  .reset-btn:hover { color: var(--text); }
+
+  /* Agent cards */
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUp 0.4s forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .agent-card:nth-child(3) { animation-delay: 0.08s; }
+  .agent-card:nth-child(4) { animation-delay: 0.16s; }
+  .agent-card:nth-child(5) { animation-delay: 0.24s; }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-num {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .card-body {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.8;
+  }
+
+  .card-impact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--accent-dim2);
+    border: 1px solid rgba(200,245,122,0.1);
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .impact-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    padding: 16px 20px;
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--red);
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* Footer */
+  .footer {
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-brand {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: #333;
+    text-transform: uppercase;
+  }
+
+  .footer-link {
+    font-size: 11px;
+    color: #333;
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    transition: color 0.15s;
+  }
+
+  .footer-link:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="brand">Taylor Intelligence</div>
+    <h1 class="headline">What could an<br><em>agent</em> do<br>for your business?</h1>
+    <p class="subline">Describe what you do in a sentence or two. We'll show you exactly where AI agents could work for you.</p>
+  </div>
+
+  <div class="input-block">
+    <div class="input-label">Describe your business</div>
+    <div class="textarea-wrap">
+      <textarea id="bizInput" maxlength="400" placeholder="e.g. I run a 3-location physiotherapy clinic. We handle bookings, insurance claims, and follow-up care plans for about 200 patients a week..."></textarea>
+      <span class="char-count" id="charCount">0 / 400</span>
+    </div>
+    <div class="examples">
+      <span class="example-label" style="font-size:11px;color:#444;align-self:center;letter-spacing:0.08em;">TRY:</span>
+      <button class="example-chip" onclick="fillExample(this)">Multi-location franchise</button>
+      <button class="example-chip" onclick="fillExample(this)">Solo consulting business</button>
+      <button class="example-chip" onclick="fillExample(this)">E-commerce store</button>
+      <button class="example-chip" onclick="fillExample(this)">Property management</button>
+      <button class="example-chip" onclick="fillExample(this)">Trades business</button>
+    </div>
+  </div>
+
+  <button class="generate-btn" id="genBtn" onclick="generate()">
+    <span class="btn-icon">⚡</span>
+    Generate Agent Ideas
+  </button>
+
+  <div class="loading" id="loading">
+    <div class="loader-bar"></div>
+    <div class="loading-text">Analysing your business...</div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="results-label">Your Agent Opportunities</div>
+      <button class="reset-btn" onclick="reset()">← Start over</button>
+    </div>
+    <div id="cardsContainer"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">Taylor Intelligence</div>
+    <a class="footer-link" href="https://www.linkedin.com/in/theotaylor" target="_blank">Connect on LinkedIn →</a>
+  </div>
+
+</div>
+
+<script>
+const examples = {
+  'Multi-location franchise': "I own 4 McDonald's franchise locations in British Columbia. We manage about 120 staff across all sites, handle scheduling, inventory ordering, and customer complaints daily.",
+  'Solo consulting business': "I'm a solo marketing consultant working with 8-10 clients at a time. I handle strategy, reporting, client communication, and content creation mostly by myself.",
+  'E-commerce store': "I run an online store selling handmade candles and home goods. I manage orders, customer service emails, inventory tracking, and social media across Instagram and Etsy.",
+  'Property management': "I manage 35 rental properties for various owners. My days are filled with maintenance requests, tenant communications, lease renewals, and contractor coordination.",
+  'Trades business': "I run a 6-person plumbing company. We handle residential and commercial jobs, manage quotes, schedule crews, follow up on unpaid invoices, and deal with supplier orders."
+};
+
+const textarea = document.getElementById('bizInput');
+const charCount = document.getElementById('charCount');
+
+textarea.addEventListener('input', () => {
+  charCount.textContent = `${textarea.value.length} / 400`;
+  charCount.style.color = textarea.value.length > 350 ? '#888' : '#333';
+});
+
+function fillExample(btn) {
+  const key = btn.textContent.trim();
+  textarea.value = examples[key] || '';
+  charCount.textContent = `${textarea.value.length} / 400`;
+}
+
+function reset() {
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('errorMsg').classList.remove('visible');
+  document.getElementById('genBtn').style.display = 'flex';
+  textarea.value = '';
+  charCount.textContent = '0 / 400';
+}
+
+async function generate() {
+  const biz = textarea.value.trim();
+  if (!biz || biz.length < 20) {
+    showError('Tell us a bit more about your business — just a sentence or two.');
+    return;
+  }
+
+  const btn = document.getElementById('genBtn');
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const errorMsg = document.getElementById('errorMsg');
+
+  btn.disabled = true;
+  btn.style.display = 'none';
+  loading.classList.add('visible');
+  results.classList.remove('visible');
+  errorMsg.classList.remove('visible');
+
+  const prompt = `You are an AI agent consultant at Taylor Intelligence, a sharp AI agency. A business owner has described their business below. Generate exactly 3 specific, concrete AI agent ideas tailored to their business.
+
+Business description: "${biz}"
+
+Respond ONLY with a JSON array of 3 objects. No preamble, no markdown backticks. Each object must have:
+- "title": short punchy agent name (4-6 words max)
+- "description": 2 sentences explaining what the agent does and how, specific to their business
+- "impact": one specific outcome — time saved, revenue protected, or efficiency gained (under 12 words, start with a verb)
+
+Make the ideas feel real, specific, and impressive — not generic. Reference details from their description where possible.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const ideas = JSON.parse(clean);
+
+    renderCards(ideas);
+    loading.classList.remove('visible');
+    results.classList.add('visible');
+
+  } catch (err) {
+    loading.classList.remove('visible');
+    btn.disabled = false;
+    btn.style.display = 'flex';
+    showError('Something went wrong generating your ideas. Try again.');
+  }
+}
+
+function renderCards(ideas) {
+  const container = document.getElementById('cardsContainer');
+  container.innerHTML = '';
+  ideas.forEach((idea, i) => {
+    const card = document.createElement('div');
+    card.className = 'agent-card';
+    card.style.marginBottom = i < ideas.length - 1 ? '16px' : '0';
+    card.innerHTML = `
+      <div class="card-num">Agent 0${i + 1}</div>
+      <div class="card-title">${idea.title}</div>
+      <div class="card-body">${idea.description}</div>
+      <div class="card-impact"><div class="impact-dot"></div>${idea.impact}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+</script>
+</body>
+</html>
