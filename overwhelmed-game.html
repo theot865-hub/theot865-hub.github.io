@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overwhelmed — Taylor Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0c;
+  --surface:#161616;
+  --surface2:#1e1e1e;
+  --border:rgba(255,255,255,0.08);
+  --text:#f0ede8;
+  --muted:#666;
+  --accent:#c8f57a;
+  --red:#ff5f5f;
+  --amber:#f5a623;
+  --blue:#7ab8f5;
+  --purple:#b87af5;
+}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Mono',monospace;
+  font-weight:300;
+  overflow:hidden;
+}
+
+/* ── SCREENS ── */
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px;
+  transition:opacity 0.4s;
+}
+.screen.hidden{opacity:0;pointer-events:none}
+
+/* ── START SCREEN ── */
+#startScreen{
+  gap:24px;
+  background:var(--bg);
+}
+#startScreen::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+}
+.brand-tag{
+  font-size:11px;font-weight:500;
+  letter-spacing:0.18em;color:var(--accent);
+  text-transform:uppercase;
+  position:relative;z-index:1;
+}
+.start-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(42px,8vw,72px);
+  line-height:1.0;text-align:center;
+  position:relative;z-index:1;
+}
+.start-title em{font-style:italic;color:var(--accent)}
+.start-sub{
+  font-size:14px;color:var(--muted);
+  text-align:center;line-height:1.8;
+  max-width:420px;position:relative;z-index:1;
+}
+.start-btn{
+  margin-top:8px;
+  padding:16px 48px;
+  background:var(--accent);color:#0c0c0c;
+  border:none;border-radius:4px;
+  font-family:'DM Mono',monospace;
+  font-size:14px;font-weight:500;
+  letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+  position:relative;z-index:1;
+}
+.start-btn:hover{background:#d4f985;transform:translateY(-2px)}
+
+/* ── GAME SCREEN ── */
+#gameScreen{
+  background:var(--bg);
+  padding:0;
+  justify-content:flex-start;
+  align-items:stretch;
+}
+
+/* Top HUD */
+.hud{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+  z-index:10;
+}
+.hud-left{display:flex;align-items:center;gap:20px}
+.hud-brand{font-size:11px;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase}
+.score-display{
+  font-size:13px;font-weight:500;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.score-num{
+  font-size:22px;font-weight:500;color:var(--accent);
+  transition:transform 0.1s;
+}
+.score-num.bump{transform:scale(1.3)}
+
+/* Stress meter */
+.stress-wrap{
+  display:flex;align-items:center;gap:10px;
+}
+.stress-label{font-size:11px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase}
+.stress-bar-bg{
+  width:140px;height:8px;
+  background:var(--border);
+  border-radius:4px;overflow:hidden;
+}
+.stress-bar-fill{
+  height:100%;width:0%;
+  background:var(--accent);
+  border-radius:4px;
+  transition:width 0.3s, background 0.3s;
+}
+
+/* Wave indicator */
+.wave-tag{
+  font-size:11px;letter-spacing:0.1em;
+  color:var(--muted);text-transform:uppercase;
+}
+
+/* Game area */
+.game-area{
+  position:relative;
+  flex:1;
+  overflow:hidden;
+}
+
+/* Task cards */
+.task-card{
+  position:absolute;
+  width:160px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:border-color 0.15s, transform 0.15s, opacity 0.3s;
+  user-select:none;
+  will-change:transform;
+}
+.task-card:hover{
+  border-color:rgba(255,255,255,0.25);
+  transform:scale(1.04) translateX(var(--tx,0px));
+}
+.task-card.dying{
+  opacity:0;transform:scale(0.8);
+  pointer-events:none;
+}
+.task-card.agent-handled{
+  border-color:var(--accent);
+  opacity:0;transform:translateY(-16px) scale(0.9);
+  pointer-events:none;
+}
+.task-icon{font-size:20px;margin-bottom:6px}
+.task-label{font-size:12px;font-weight:500;color:var(--text);line-height:1.4}
+.task-sub{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
+.task-card .left-bar{
+  position:absolute;left:0;top:0;
+  width:3px;height:100%;border-radius:6px 0 0 6px;
+}
+
+/* Click ripple */
+.ripple{
+  position:absolute;
+  width:40px;height:40px;
+  border-radius:50%;
+  background:rgba(200,245,122,0.25);
+  transform:translate(-50%,-50%) scale(0);
+  animation:rippleOut 0.4s forwards;
+  pointer-events:none;
+}
+@keyframes rippleOut{
+  to{transform:translate(-50%,-50%) scale(3);opacity:0}
+}
+
+/* ── AGENT DOCK ── */
+.agent-dock{
+  padding:14px 24px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+}
+.dock-label{
+  font-size:10px;letter-spacing:0.14em;
+  color:var(--muted);text-transform:uppercase;
+  margin-bottom:10px;
+}
+.agents-row{
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.agent-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  color:var(--muted);
+  font-family:'DM Mono',monospace;
+  font-size:12px;font-weight:400;
+  cursor:pointer;transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.agent-btn.available{
+  border-color:var(--accent);
+  color:var(--accent);
+  animation:pulse-border 1.5s ease-in-out infinite;
+}
+@keyframes pulse-border{
+  0%,100%{box-shadow:0 0 0 0 rgba(200,245,122,0.3)}
+  50%{box-shadow:0 0 0 4px rgba(200,245,122,0)}
+}
+.agent-btn.deployed{
+  background:rgba(200,245,122,0.08);
+  border-color:rgba(200,245,122,0.3);
+  color:var(--accent);
+  animation:none;
+  cursor:default;
+}
+.agent-btn.deployed::after{
+  content:'ACTIVE';
+  position:absolute;top:4px;right:6px;
+  font-size:8px;letter-spacing:0.1em;
+  color:var(--accent);opacity:0.7;
+}
+.agent-cost{
+  font-size:10px;color:var(--muted);
+  background:var(--border);
+  padding:2px 6px;border-radius:2px;
+}
+.agent-btn.available .agent-cost{
+  background:rgba(200,245,122,0.15);
+  color:var(--accent);
+}
+
+/* Deploy flash */
+.deploy-flash{
+  position:fixed;inset:0;
+  background:rgba(200,245,122,0.06);
+  pointer-events:none;
+  animation:flashOut 0.5s forwards;
+  z-index:100;
+}
+@keyframes flashOut{to{opacity:0}}
+
+/* Agent beam animation */
+.agent-beam{
+  position:absolute;
+  width:2px;
+  background:linear-gradient(to bottom, var(--accent), transparent);
+  pointer-events:none;
+  animation:beamDown 0.4s forwards;
+  z-index:50;
+}
+@keyframes beamDown{
+  from{opacity:1;transform:scaleY(0);transform-origin:top}
+  to{opacity:0;transform:scaleY(1);transform-origin:top}
+}
+
+/* Stress warning overlay */
+.stress-warning{
+  position:absolute;inset:0;
+  border:2px solid transparent;
+  pointer-events:none;
+  transition:border-color 0.3s;
+  z-index:5;
+}
+.stress-warning.critical{
+  border-color:rgba(255,95,95,0.4);
+  animation:warningPulse 0.8s ease-in-out infinite;
+}
+@keyframes warningPulse{
+  0%,100%{border-color:rgba(255,95,95,0.2)}
+  50%{border-color:rgba(255,95,95,0.6)}
+}
+
+/* Floating +1 text */
+.float-score{
+  position:absolute;
+  font-size:16px;font-weight:500;
+  color:var(--accent);
+  pointer-events:none;
+  animation:floatUp 0.7s forwards;
+  z-index:200;
+}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(-40px)}
+}
+
+/* ── END SCREEN ── */
+#endScreen{
+  gap:20px;
+  background:var(--bg);
+}
+#endScreen::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+}
+.end-title{
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(36px,6vw,58px);
+  text-align:center;line-height:1.1;
+  position:relative;z-index:1;
+}
+.end-title em{font-style:italic;color:var(--accent)}
+.end-stats{
+  display:flex;gap:24px;
+  position:relative;z-index:1;
+}
+.end-stat{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:20px 28px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+}
+.end-stat-num{
+  font-size:36px;font-weight:500;
+  color:var(--accent);
+}
+.end-stat-label{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+.end-msg{
+  font-size:14px;color:var(--muted);
+  text-align:center;max-width:400px;
+  line-height:1.8;
+  position:relative;z-index:1;
+}
+.end-msg strong{color:var(--text);font-weight:500}
+.end-btns{
+  display:flex;gap:12px;
+  position:relative;z-index:1;
+}
+.btn-primary{
+  padding:14px 32px;
+  background:var(--accent);color:#0c0c0c;
+  border:none;border-radius:4px;
+  font-family:'DM Mono',monospace;
+  font-size:13px;font-weight:500;
+  letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-primary:hover{background:#d4f985;transform:translateY(-1px)}
+.btn-secondary{
+  padding:14px 32px;
+  background:transparent;color:var(--muted);
+  border:1px solid var(--border);border-radius:4px;
+  font-family:'DM Mono',monospace;
+  font-size:13px;font-weight:400;
+  letter-spacing:0.06em;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
+.ti-footer{
+  font-size:11px;letter-spacing:0.14em;
+  color:#333;text-transform:uppercase;
+  position:relative;z-index:1;
+}
+
+/* ── HOW TO PLAY ── */
+.how-to-play{
+  display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;justify-content:center;
+  max-width:680px;
+  position:relative;z-index:1;
+}
+.how-step{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:16px 14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  text-align:center;
+  min-width:130px;flex:1;max-width:160px;
+}
+.how-icon{font-size:24px}
+.how-text{font-size:12px;color:var(--muted);line-height:1.6}
+.how-text strong{color:var(--text);font-weight:500;display:block;margin-bottom:2px}
+.how-arrow{font-size:18px;color:var(--border);flex-shrink:0}
+
+/* ── TUTORIAL OVERLAY ── */
+.tutorial-overlay{
+  position:absolute;inset:0;
+  background:rgba(12,12,12,0.88);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:20px;z-index:200;
+  animation:fadeOverlay 0.3s ease;
+}
+@keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
+.tutorial-overlay.hiding{animation:fadeOverlay 0.4s ease reverse forwards}
+.tut-title{
+  font-family:'DM Serif Display',serif;
+  font-size:32px;color:var(--text);
+  text-align:center;line-height:1.2;
+}
+.tut-title em{font-style:italic;color:var(--accent)}
+.tut-steps{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px}
+.tut-step{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+}
+.tut-step-icon{font-size:22px;flex-shrink:0}
+.tut-step-text{font-size:13px;line-height:1.6;color:var(--muted)}
+.tut-step-text strong{color:var(--text);font-weight:500}
+.tut-btn{
+  padding:14px 40px;
+  background:var(--accent);color:#0c0c0c;
+  border:none;border-radius:4px;
+  font-family:'DM Mono',monospace;
+  font-size:13px;font-weight:500;
+  letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.tut-btn:hover{background:#d4f985;transform:translateY(-1px)}
+
+/* Hint badge on first task */
+.click-hint{
+  position:absolute;
+  top:-28px;left:50%;
+  transform:translateX(-50%);
+  background:var(--accent);
+  color:#0c0c0c;
+  font-size:10px;font-weight:500;
+  letter-spacing:0.08em;
+  padding:3px 8px;border-radius:2px;
+  white-space:nowrap;
+  animation:hintBounce 0.6s ease-in-out infinite alternate;
+}
+@keyframes hintBounce{
+  from{transform:translateX(-50%) translateY(0)}
+  to{transform:translateX(-50%) translateY(-4px)}
+}
+.click-hint::after{
+  content:'';
+  position:absolute;
+  bottom:-4px;left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:4px solid transparent;
+  border-right:4px solid transparent;
+  border-top:4px solid var(--accent);
+}
+
+/* Agent dock hint */
+.dock-hint{
+  font-size:11px;color:var(--accent);
+  margin-top:4px;
+  animation:hintFade 2s ease-in-out infinite;
+}
+@keyframes hintFade{0%,100%{opacity:0.4}50%{opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div class="screen" id="startScreen">
+  <div class="brand-tag">Taylor Intelligence</div>
+  <h1 class="start-title">You're <em>running</em><br>a business.</h1>
+  <p class="start-sub">Tasks are falling. Click them to handle manually — or earn enough points to deploy an AI agent that handles them for you. Don't let stress hit 100%.</p>
+
+  <div class="how-to-play">
+    <div class="how-step">
+      <div class="how-icon">👆</div>
+      <div class="how-text"><strong>Click falling tasks</strong><br>to handle them manually</div>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-icon">📈</div>
+      <div class="how-text"><strong>Earn 10 points</strong><br>to unlock an agent</div>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-icon">⚡</div>
+      <div class="how-text"><strong>Deploy agents</strong><br>they handle tasks automatically</div>
+    </div>
+    <div class="how-arrow">→</div>
+    <div class="how-step">
+      <div class="how-icon">💀</div>
+      <div class="how-text"><strong>Don't let stress</strong><br>reach 100%</div>
+    </div>
+  </div>
+
+  <button class="start-btn" onclick="startGame()">Start — I can handle it ⚡</button>
+</div>
+
+<!-- GAME -->
+<div class="screen hidden" id="gameScreen">
+  <div class="hud">
+    <div class="hud-left">
+      <div class="hud-brand">Taylor Intelligence</div>
+      <div class="score-display">
+        <span style="color:var(--muted);font-size:12px">HANDLED</span>
+        <span class="score-num" id="scoreNum">0</span>
+      </div>
+    </div>
+    <div class="stress-wrap">
+      <span class="stress-label">Stress</span>
+      <div class="stress-bar-bg">
+        <div class="stress-bar-fill" id="stressBar"></div>
+      </div>
+    </div>
+    <div class="wave-tag" id="waveTag">WAVE 1</div>
+  </div>
+
+  <div class="game-area" id="gameArea">
+    <div class="stress-warning" id="stressWarning"></div>
+
+    <!-- Tutorial overlay -->
+    <div class="tutorial-overlay" id="tutOverlay">
+      <div class="tut-title">Tasks are falling.<br><em>Don't get overwhelmed.</em></div>
+      <div class="tut-steps">
+        <div class="tut-step">
+          <div class="tut-step-icon">👆</div>
+          <div class="tut-step-text"><strong>Click falling task cards</strong> to handle them manually. Each one earns you a point.</div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-icon">⚡</div>
+          <div class="tut-step-text"><strong>At 10 points</strong>, deploy an AI agent from the dock below. It handles that task type automatically — forever.</div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-icon">❤️</div>
+          <div class="tut-step-text"><strong>Miss too many tasks</strong> and your stress hits 100%. Game over.</div>
+        </div>
+      </div>
+      <button class="tut-btn" onclick="dismissTutorial()">Got it — let's go</button>
+    </div>
+  </div>
+
+  <div class="agent-dock">
+    <div class="dock-label">Agent dock — earn 10 points to deploy an agent</div>
+    <div id="dockHint" class="dock-hint">👆 Agents handle tasks automatically once deployed</div>
+    <div class="agents-row" id="agentsRow"></div>
+  </div>
+</div>
+
+<!-- END -->
+<div class="screen hidden" id="endScreen">
+  <div class="brand-tag">Taylor Intelligence</div>
+  <h1 class="end-title" id="endTitle">Not bad.<br>But <em>agents</em> don't tire.</h1>
+  <div class="end-stats">
+    <div class="end-stat">
+      <div class="end-stat-num" id="finalScore">0</div>
+      <div class="end-stat-label">Tasks handled</div>
+    </div>
+    <div class="end-stat">
+      <div class="end-stat-num" id="finalAgents">0</div>
+      <div class="end-stat-label">Agents deployed</div>
+    </div>
+    <div class="end-stat">
+      <div class="end-stat-num" id="finalWave">1</div>
+      <div class="end-stat-label">Wave reached</div>
+    </div>
+  </div>
+  <p class="end-msg" id="endMsg">Every task you clicked, an agent could have handled automatically — <strong>while you slept.</strong></p>
+  <div class="end-btns">
+    <button class="btn-primary" onclick="startGame()">Play again</button>
+    <button class="btn-secondary" onclick="window.open('https://theot865-hub.github.io/agent-generator.html','_blank')">Build my agent stack →</button>
+  </div>
+  <div class="ti-footer">taylorintelligence.ca</div>
+</div>
+
+<script>
+// ── TASK TYPES ─────────────────────────────────────────────────────────────
+const TASK_TYPES = [
+  { id:'email',   icon:'📧', label:'New email',        sub:'Customer enquiry', color:'#7ab8f5', agent:'Email Agent' },
+  { id:'invoice', icon:'🧾', label:'Invoice due',      sub:'$340 outstanding', color:'#f5a623', agent:'Billing Agent' },
+  { id:'booking', icon:'📅', label:'Booking request',  sub:'Wants 2pm slot',   color:'#c8f57a', agent:'Booking Agent' },
+  { id:'review',  icon:'⭐', label:'New review',       sub:'Needs a response',  color:'#b87af5', agent:'Reviews Agent' },
+  { id:'lead',    icon:'🔥', label:'New lead',         sub:'Found via website', color:'#ff5f5f', agent:'Lead Agent' },
+];
+
+const AGENTS = TASK_TYPES.map(t => ({
+  id: t.id,
+  label: t.agent,
+  icon: t.icon,
+  color: t.color,
+  deployed: false,
+  taskType: t.id,
+}));
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let score = 0;
+let stress = 0;
+let wave = 1;
+let tasks = [];
+let taskIdCounter = 0;
+let deployedAgents = new Set();
+let agentPoints = 0;
+let gameRunning = false;
+let spawnInterval, stressInterval, waveInterval;
+let agentInterval;
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const gameArea    = document.getElementById('gameArea');
+const stressBar   = document.getElementById('stressBar');
+const scoreNum    = document.getElementById('scoreNum');
+const waveTag     = document.getElementById('waveTag');
+const stressWarn  = document.getElementById('stressWarning');
+const agentsRow   = document.getElementById('agentsRow');
+
+// ── SCREENS ────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  ['startScreen','gameScreen','endScreen'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ── TUTORIAL ──────────────────────────────────────────────────────────────
+let tutorialDismissed = false;
+let firstTaskHinted = false;
+
+function dismissTutorial() {
+  tutorialDismissed = true;
+  const overlay = document.getElementById('tutOverlay');
+  overlay.classList.add('hiding');
+  setTimeout(() => overlay.remove(), 400);
+}
+
+// ── START ──────────────────────────────────────────────────────────────────
+function startGame() {
+  score = 0; stress = 0; wave = 1;
+  tasks = []; taskIdCounter = 0;
+  deployedAgents = new Set();
+  agentPoints = 0;
+  gameRunning = true;
+  tutorialDismissed = false;
+  firstTaskHinted = false;
+
+  // Clear old tasks
+  gameArea.querySelectorAll('.task-card,.ripple,.float-score,.agent-beam').forEach(el => el.remove());
+
+  // Restore tutorial overlay
+  if (!document.getElementById('tutOverlay')) {
+    const ov = document.createElement('div');
+    ov.className = 'tutorial-overlay';
+    ov.id = 'tutOverlay';
+    ov.innerHTML = `
+      <div class="tut-title">Tasks are falling.<br><em>Don't get overwhelmed.</em></div>
+      <div class="tut-steps">
+        <div class="tut-step">
+          <div class="tut-step-icon">👆</div>
+          <div class="tut-step-text"><strong>Click falling task cards</strong> to handle them manually. Each one earns you a point.</div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-icon">⚡</div>
+          <div class="tut-step-text"><strong>At 10 points</strong>, deploy an AI agent from the dock below. It handles that task type automatically — forever.</div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-step-icon">❤️</div>
+          <div class="tut-step-text"><strong>Miss too many tasks</strong> and your stress hits 100%. Game over.</div>
+        </div>
+      </div>
+      <button class="tut-btn" onclick="dismissTutorial()">Got it — let's go</button>
+    `;
+    gameArea.appendChild(ov);
+  }
+
+  // Reset agents
+  AGENTS.forEach(a => a.deployed = false);
+  buildAgentDock();
+
+  updateHUD();
+  showScreen('gameScreen');
+
+  // Start loops
+  clearAllIntervals();
+  spawnInterval  = setInterval(spawnTask, getSpawnRate());
+  stressInterval = setInterval(tickStress, 500);
+  waveInterval   = setInterval(checkWave, 5000);
+  agentInterval  = setInterval(agentTick, 800);
+}
+
+function clearAllIntervals() {
+  clearInterval(spawnInterval);
+  clearInterval(stressInterval);
+  clearInterval(waveInterval);
+  clearInterval(agentInterval);
+}
+
+function getSpawnRate() {
+  return Math.max(600, 1800 - wave * 180);
+}
+
+// ── TASK SPAWNING ──────────────────────────────────────────────────────────
+function spawnTask() {
+  if (!gameRunning) return;
+  const type = TASK_TYPES[Math.floor(Math.random() * TASK_TYPES.length)];
+  const area  = gameArea.getBoundingClientRect();
+  const x     = Math.random() * (area.width - 180) + 10;
+  const id    = `task-${taskIdCounter++}`;
+
+  const card  = document.createElement('div');
+  card.className = 'task-card';
+  card.id = id;
+  card.dataset.typeId = type.id;
+  card.style.left = x + 'px';
+  card.style.top  = '-120px';
+  card.style.setProperty('--tx', '0px');
+  card.innerHTML = `
+    <div class="left-bar" style="background:${type.color}"></div>
+    <div class="task-icon">${type.icon}</div>
+    <div class="task-label">${type.label}</div>
+    <div class="task-sub">${type.sub}</div>
+  `;
+  card.onclick = (e) => handleTask(id, e);
+  gameArea.appendChild(card);
+
+  // Show click hint on very first task
+  if (!firstTaskHinted && tutorialDismissed) {
+    firstTaskHinted = true;
+    const hint = document.createElement('div');
+    hint.className = 'click-hint';
+    hint.textContent = 'CLICK ME';
+    card.style.position = 'absolute';
+    card.appendChild(hint);
+    setTimeout(() => hint.remove(), 3000);
+  }
+
+  const taskObj = { id, el: card, typeId: type.id, y: -120, speed: 0.6 + wave * 0.15 + Math.random() * 0.3 };
+  tasks.push(taskObj);
+
+  requestAnimationFrame(() => animateTask(taskObj));
+}
+
+function animateTask(taskObj) {
+  if (!gameRunning) return;
+  if (!document.getElementById(taskObj.id)) return;
+
+  taskObj.y += taskObj.speed;
+  taskObj.el.style.top = taskObj.y + 'px';
+
+  const area = gameArea.getBoundingClientRect();
+  if (taskObj.y > area.height + 20) {
+    // Missed — add stress
+    addStress(12);
+    removeTask(taskObj.id);
+    return;
+  }
+
+  requestAnimationFrame(() => animateTask(taskObj));
+}
+
+// ── HANDLE TASK (manual click) ─────────────────────────────────────────────
+function handleTask(id, e) {
+  const taskObj = tasks.find(t => t.id === id);
+  if (!taskObj) return;
+
+  addScore(1);
+  showFloatScore(e.clientX, e.clientY, '+1');
+  showRipple(e.clientX, e.clientY);
+  killTask(id, 'dying');
+}
+
+// ── AGENT TICK ─────────────────────────────────────────────────────────────
+function agentTick() {
+  if (!gameRunning || deployedAgents.size === 0) return;
+
+  tasks.forEach(taskObj => {
+    if (deployedAgents.has(taskObj.typeId)) {
+      // Agent handles this task
+      addScore(1);
+      showAgentHandle(taskObj);
+      killTask(taskObj.id, 'agent-handled');
+    }
+  });
+}
+
+function showAgentHandle(taskObj) {
+  const rect = taskObj.el.getBoundingClientRect();
+  const areaRect = gameArea.getBoundingClientRect();
+  const x = rect.left - areaRect.left + rect.width / 2;
+  const y = rect.top - areaRect.top;
+
+  const beam = document.createElement('div');
+  beam.className = 'agent-beam';
+  beam.style.left  = x + 'px';
+  beam.style.top   = '0px';
+  beam.style.height = y + 'px';
+  gameArea.appendChild(beam);
+  setTimeout(() => beam.remove(), 500);
+
+  showFloatScore(rect.left + rect.width / 2, rect.top, '⚡');
+}
+
+// ── STRESS ────────────────────────────────────────────────────────────────
+function addStress(amount) {
+  stress = Math.min(100, stress + amount);
+  updateStressBar();
+  if (stress >= 100) endGame();
+}
+
+function tickStress() {
+  // Natural stress decay if agents deployed
+  if (deployedAgents.size > 0 && stress > 0) {
+    stress = Math.max(0, stress - deployedAgents.size * 1.5);
+    updateStressBar();
+  }
+}
+
+function updateStressBar() {
+  stressBar.style.width = stress + '%';
+  if (stress > 75) {
+    stressBar.style.background = '#ff5f5f';
+    stressWarn.classList.add('critical');
+  } else if (stress > 50) {
+    stressBar.style.background = '#f5a623';
+    stressWarn.classList.remove('critical');
+  } else {
+    stressBar.style.background = 'var(--accent)';
+    stressWarn.classList.remove('critical');
+  }
+}
+
+// ── WAVE ──────────────────────────────────────────────────────────────────
+function checkWave() {
+  wave++;
+  waveTag.textContent = `WAVE ${wave}`;
+  clearInterval(spawnInterval);
+  spawnInterval = setInterval(spawnTask, getSpawnRate());
+  // Flash wave change
+  waveTag.style.color = 'var(--accent)';
+  setTimeout(() => waveTag.style.color = '', 600);
+}
+
+// ── SCORE ─────────────────────────────────────────────────────────────────
+function addScore(n) {
+  score += n;
+  agentPoints += n;
+  scoreNum.textContent = score;
+  scoreNum.classList.add('bump');
+  setTimeout(() => scoreNum.classList.remove('bump'), 150);
+  // Update agent availability
+  updateAgentButtons();
+}
+
+// ── AGENT DOCK ────────────────────────────────────────────────────────────
+function buildAgentDock() {
+  agentsRow.innerHTML = '';
+  AGENTS.forEach(agent => {
+    const btn = document.createElement('button');
+    btn.className = 'agent-btn';
+    btn.id = `agent-btn-${agent.id}`;
+    btn.innerHTML = `${agent.icon} ${agent.label} <span class="agent-cost">10 pts</span>`;
+    btn.onclick = () => deployAgent(agent.id);
+    agentsRow.appendChild(btn);
+  });
+}
+
+function updateAgentButtons() {
+  AGENTS.forEach(agent => {
+    const btn = document.getElementById(`agent-btn-${agent.id}`);
+    if (!btn) return;
+    if (agent.deployed) {
+      btn.className = 'agent-btn deployed';
+      btn.onclick = null;
+    } else if (score >= 10) {
+      btn.className = 'agent-btn available';
+    } else {
+      btn.className = 'agent-btn';
+    }
+  });
+}
+
+function deployAgent(agentId) {
+  if (score < 10) return;
+  const agent = AGENTS.find(a => a.id === agentId);
+  if (!agent || agent.deployed) return;
+
+  score -= 10;
+  agentPoints -= 10;
+  agent.deployed = true;
+  deployedAgents.add(agent.taskType);
+
+  scoreNum.textContent = score;
+  updateAgentButtons();
+
+  // Hide dock hint after first deploy
+  const dockHint = document.getElementById('dockHint');
+  if (dockHint) dockHint.style.display = 'none';
+
+  // Flash
+  const flash = document.createElement('div');
+  flash.className = 'deploy-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+
+  // Show deployed message
+  const btn = document.getElementById(`agent-btn-${agentId}`);
+  if (btn) btn.className = 'agent-btn deployed';
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function removeTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function killTask(id, className) {
+  const taskObj = tasks.find(t => t.id === id);
+  if (!taskObj) return;
+  taskObj.el.classList.add(className);
+  setTimeout(() => removeTask(id), 400);
+}
+
+function showRipple(cx, cy) {
+  const area = gameArea.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = (cx - area.left) + 'px';
+  r.style.top  = (cy - area.top) + 'px';
+  gameArea.appendChild(r);
+  setTimeout(() => r.remove(), 400);
+}
+
+function showFloatScore(cx, cy, text) {
+  const area = gameArea.getBoundingClientRect();
+  const f = document.createElement('div');
+  f.className = 'float-score';
+  f.textContent = text;
+  f.style.left = (cx - area.left) + 'px';
+  f.style.top  = (cy - area.top) + 'px';
+  gameArea.appendChild(f);
+  setTimeout(() => f.remove(), 700);
+}
+
+function updateHUD() {
+  scoreNum.textContent = score;
+  waveTag.textContent = `WAVE ${wave}`;
+  updateStressBar();
+}
+
+// ── END GAME ──────────────────────────────────────────────────────────────
+function endGame() {
+  gameRunning = false;
+  clearAllIntervals();
+
+  const agentsDeployed = deployedAgents.size;
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalAgents').textContent = agentsDeployed;
+  document.getElementById('finalWave').textContent = wave;
+
+  let title, msg;
+  if (agentsDeployed === 0) {
+    title = `You tried to do<br>it all <em>yourself.</em>`;
+    msg = `You handled every task manually — and still got overwhelmed. <strong>This is what most business owners do every day.</strong> There's a better way.`;
+  } else if (agentsDeployed < 3) {
+    title = `Getting there.<br><em>Agents</em> helped.`;
+    msg = `You deployed ${agentsDeployed} agent${agentsDeployed>1?'s':''} and bought yourself some breathing room. <strong>Imagine deploying a full stack — while you slept.</strong>`;
+  } else {
+    title = `Now you're<br><em>thinking</em> right.`;
+    msg = `${agentsDeployed} agents running, stress under control. <strong>This is what leverage actually looks like.</strong> Build your real agent stack below.`;
+  }
+
+  document.getElementById('endTitle').innerHTML = title;
+  document.getElementById('endMsg').innerHTML = msg;
+  showScreen('endScreen');
+}
+</script>
+</body>
+</html>
