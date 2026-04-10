@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Biggest Business Opportunity Ever — Taylor Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#fff;color:#000;font-family:'DM Sans',system-ui,sans-serif;font-size:14px;}
+
+/* ── SHELL ── */
+.shell{display:flex;flex-direction:column;height:100vh;}
+
+/* ── TOPBAR ── */
+.topbar{height:42px;border-bottom:1px solid #ebebeb;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
+.tb-brand{font-family:'DM Mono',monospace;font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:#000;}
+.tb-tag{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#bbb;}
+
+/* ── MAIN ── */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* ── CHART SIDE ── */
+.chart-side{flex:1;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding:0 0 8px 0;}
+
+.chart-titles{text-align:center;padding:18px 24px 10px;flex-shrink:0;}
+.chart-titles h1{font-family:'Playfair Display',serif;font-size:clamp(1rem,1.6vw,1.4rem);font-weight:700;line-height:1.25;color:#000;letter-spacing:-.01em;}
+.chart-titles h1 em{font-style:italic;color:#888;}
+.chart-titles p{font-size:9.5px;letter-spacing:0.11em;text-transform:uppercase;color:#ccc;margin-top:6px;}
+
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:0 12px;}
+canvas{display:block;cursor:crosshair;}
+
+/* ── TOOLTIP ── */
+.tooltip{
+  position:fixed;pointer-events:none;z-index:999;
+  opacity:0;transition:opacity .12s;
+  max-width:240px;
+}
+.tt-inner{
+  background:#fff;
+  border:1px solid #e0e0e0;
+  border-radius:6px;
+  padding:14px 16px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.06);
+}
+.tt-zone{font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.tt-zone.blue{color:#5b9bd5;}
+.tt-zone.red{color:#c0504d;}
+.tt-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#000;margin-bottom:8px;line-height:1.2;}
+.tt-stats{display:flex;gap:10px;margin-bottom:10px;}
+.tt-stat{text-align:center;}
+.tt-num{font-family:'DM Mono',monospace;font-size:.95rem;line-height:1;}
+.tt-num.b{color:#5b9bd5;}.tt-num.r{color:#c0504d;}.tt-num.g{color:#aaa;}
+.tt-lbl{font-size:8px;letter-spacing:.09em;text-transform:uppercase;color:#ccc;margin-top:2px;}
+.tt-divider{height:1px;background:#f0f0f0;margin:10px 0;}
+.tt-heading{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-bottom:6px;}
+.tt-desc{font-size:11.5px;color:#555;line-height:1.7;margin-bottom:8px;}
+.tt-items{display:flex;flex-direction:column;gap:4px;}
+.tt-item{display:flex;align-items:flex-start;gap:6px;font-size:11px;color:#777;line-height:1.5;}
+.tt-bullet{width:3px;height:3px;border-radius:50%;flex-shrink:0;margin-top:5.5px;}
+.tt-bullet.blue{background:#5b9bd5;}.tt-bullet.red{background:#c0504d;}
+
+/* ── RIGHT PANEL ── */
+.panel{
+  width:272px;flex-shrink:0;
+  border-left:1px solid #ebebeb;
+  overflow-y:auto;
+  padding:24px 20px;
+}
+.panel::-webkit-scrollbar{width:2px;}
+.panel::-webkit-scrollbar-thumb{background:#eee;}
+
+.p-section{margin-bottom:28px;}
+.p-section:last-child{margin-bottom:0;}
+.p-label{font-size:8.5px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#ccc;margin-bottom:10px;}
+.p-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#000;line-height:1.3;margin-bottom:8px;}
+.p-body{font-size:12px;color:#888;line-height:1.8;}
+.p-body strong{color:#333;font-weight:500;}
+.p-divider{height:1px;background:#f0f0f0;margin:20px 0;}
+
+/* Timeline rows */
+.timeline-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.tl-badge{flex-shrink:0;font-family:'DM Mono',monospace;font-size:9px;padding:3px 7px;border-radius:2px;margin-top:1px;white-space:nowrap;}
+.tl-badge.fast{background:#fff3f3;color:#c0504d;}
+.tl-badge.mid{background:#fff8ec;color:#d97706;}
+.tl-badge.slow{background:#f0f9ff;color:#5b9bd5;}
+.tl-content{}
+.tl-sectors{font-size:11px;font-weight:500;color:#333;line-height:1.5;margin-bottom:2px;}
+.tl-note{font-size:10.5px;color:#aaa;line-height:1.55;}
+
+/* Company rows */
+.co-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
+.co-name{font-size:11px;font-weight:600;color:#222;min-width:70px;flex-shrink:0;padding-top:1px;}
+.co-desc{font-size:11px;color:#999;line-height:1.55;}
+
+/* Opportunity rows */
+.opp-item{padding:11px 13px;border:1px solid #f0f0f0;border-radius:5px;margin-bottom:9px;}
+.opp-sector{font-size:10px;font-weight:600;color:#333;margin-bottom:3px;}
+.opp-why{font-size:11px;color:#999;line-height:1.6;}
+
+.source-note{font-size:10.5px;color:#bbb;line-height:1.7;}
+.source-note strong{color:#888;font-weight:500;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-brand">AI Opportunity Map</div>
+    <div class="tb-tag">Taylor Intelligence</div>
+  </div>
+
+  <div class="main">
+
+    <!-- CHART -->
+    <div class="chart-side">
+      <div class="chart-titles">
+        <h1>The blue shape is <em>the biggest business opportunity ever made.</em></h1>
+        <p>Anthropic Labour Market Research · Hover any sector to explore</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="radar"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="panel">
+
+      <div class="p-section">
+        <div class="p-label">The Source</div>
+        <div class="p-body">
+          <strong>Anthropic's 2024 Labour Market Study</strong> mapped AI's theoretical capability against observed usage across every major occupation — 52 million job postings analysed. The gap between blue and red is what you're seeing. It is enormous. And it is almost entirely unclaimed.
+        </div>
+      </div>
+
+      <div class="p-divider"></div>
+
+      <div class="p-section">
+        <div class="p-label">When the blue gets filled</div>
+        <div class="p-body" style="margin-bottom:14px;">Enterprise AI is moving fast. Here's how long the window stays open by sector.</div>
+
+        <div class="timeline-item">
+          <div class="tl-badge fast">1–2 yrs</div>
+          <div class="tl-content">
+            <div class="tl-sectors">Legal · Finance · Office & Admin · Computer & Math</div>
+            <div class="tl-note">High document volume, clear ROI, enterprise vendors already deployed. Window closing fast.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-badge mid">3–5 yrs</div>
+          <div class="tl-content">
+            <div class="tl-sectors">Healthcare · Education · Sales · Arts & Media</div>
+            <div class="tl-note">Regulation, trust, and workflow complexity are slowing adoption — but not stopping it.</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="tl-badge slow">5–10 yrs</div>
+          <div class="tl-content">
+            <div class="tl-sectors">Trades · Construction · Food & Serving · Agriculture</div>
+            <div class="tl-note">Physical industries. Enterprise won't touch them for years. This is the small business window.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-divider"></div>
+
+      <div class="p-section">
+        <div class="p-label">The enterprise takeover</div>
+        <div class="p-body" style="margin-bottom:12px;">The big players are moving top-down — enterprise first. They will eventually reach SMBs. But not yet.</div>
+
+        <div class="co-item">
+          <div class="co-name">Microsoft</div>
+          <div class="co-desc">Copilot embedded into Office, Teams, and Dynamics. Targeting every white-collar worker.</div>
+        </div>
+        <div class="co-item">
+          <div class="co-name">Google</div>
+          <div class="co-desc">Gemini across Workspace. Education, finance, and business operations.</div>
+        </div>
+        <div class="co-item">
+          <div class="co-name">Salesforce</div>
+          <div class="co-desc">Einstein AI owning enterprise sales automation end-to-end.</div>
+        </div>
+        <div class="co-item">
+          <div class="co-name">Harvey AI</div>
+          <div class="co-desc">Purpose-built for BigLaw. Moving through the legal sector from the top down.</div>
+        </div>
+        <div class="co-item">
+          <div class="co-name">Epic / Oracle</div>
+          <div class="co-desc">Healthcare AI embedded into the systems hospitals already run on.</div>
+        </div>
+      </div>
+
+      <div class="p-divider"></div>
+
+      <div class="p-section">
+        <div class="p-label">Where the entrepreneur wins</div>
+        <div class="p-body" style="margin-bottom:12px;">Enterprise moves slowly at the bottom of the market. The small business operator who moves first in their local sector has a 3–7 year window before they face real competition.</div>
+
+        <div class="opp-item">
+          <div class="opp-sector">Local trades & construction</div>
+          <div class="opp-why">No enterprise vendor is building for the 4-person plumbing company. First mover advantage is massive and uncontested.</div>
+        </div>
+        <div class="opp-item">
+          <div class="opp-sector">Independent healthcare operators</div>
+          <div class="opp-why">Private clinics, physio practices, and allied health are completely ignored by enterprise AI. Huge admin burden. Huge opportunity.</div>
+        </div>
+        <div class="opp-item">
+          <div class="opp-sector">Franchise & multi-location food</div>
+          <div class="opp-why">Operations, inventory, and staff scheduling are still manual. The operator who automates first runs leaner than everyone else in their market.</div>
+        </div>
+        <div class="opp-item">
+          <div class="opp-sector">SMB professional services</div>
+          <div class="opp-why">Solo accountants, local lawyers, independent consultants — they have the same document burden as enterprise but none of the tools. Yet.</div>
+        </div>
+      </div>
+
+      <div class="p-divider"></div>
+
+      <div class="source-note">
+        <strong>Taylor Intelligence</strong> builds custom AI agents and automation for business operators and individuals. If you see your industry in the blue — and want to move before the window closes — reach out.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <div class="tt-inner">
+    <div class="tt-zone" id="ttZone"></div>
+    <div class="tt-name" id="ttName"></div>
+    <div class="tt-stats">
+      <div class="tt-stat"><div class="tt-num b" id="ttBlue"></div><div class="tt-lbl">Possible</div></div>
+      <div class="tt-stat"><div class="tt-num r" id="ttRed"></div><div class="tt-lbl">Actual</div></div>
+      <div class="tt-stat"><div class="tt-num g" id="ttGap"></div><div class="tt-lbl">Gap</div></div>
+    </div>
+    <div class="tt-divider"></div>
+    <div class="tt-heading" id="ttHeading"></div>
+    <div class="tt-desc" id="ttDesc"></div>
+    <div class="tt-items" id="ttItems"></div>
+  </div>
+</div>
+
+<script>
+const IND=[
+  {name:'Management',blue:.86,red:.10,opp:'Meeting prep, performance reports, decision modelling, stakeholder briefings — fully automatable.',opp_items:['Auto-generate weekly performance reports','AI-drafted board packs and stakeholder updates','Scenario modelling and risk analysis on demand'],curr:'Managers use AI mostly for email drafts. The vast majority of management work is still manual.',curr_items:['Occasional email drafting','Basic document summarisation','Light research']},
+  {name:'Business & Finance',blue:.82,red:.18,opp:'Financial analysis, variance commentary, invoice processing, compliance monitoring — all faster and more accurate with AI.',opp_items:['Automated financial reports from raw data','AI variance analysis and commentary','Invoice categorisation and anomaly detection'],curr:'Finance teams use AI for spreadsheet help. Core reporting and compliance stays manual.',curr_items:['Spreadsheet formula assistance','Basic data analysis','Occasional document review']},
+  {name:'Computer & Math',blue:.80,red:.44,opp:'Tech has the highest usage — but most only use autocomplete. Architecture, review, testing, DevOps remain untapped.',opp_items:['Full feature implementation from requirements','Automated code review and security auditing','Documentation generation from existing code'],curr:'Developers use AI for code completion and debugging. Architecture and design are largely unassisted.',curr_items:['Code autocomplete (Copilot, Cursor)','Debugging assistance','Stack Overflow replacement']},
+  {name:'Architecture & Engineering',blue:.70,red:.11,opp:'Spec analysis, compliance checking, material optimisation, technical documentation — freeing engineers for safety and design.',opp_items:['Automated compliance checking against codes','AI-assisted structural optimisation','Technical specification and report drafting'],curr:'Engineers use AI occasionally for calculations. Most analysis and spec review is manual.',curr_items:['Calculation assistance','Basic specification drafting','Research summarisation']},
+  {name:'Life & Social Sciences',blue:.62,red:.13,opp:'Literature review, data analysis, grant writing, research synthesis — AI provides massive leverage across the research workflow.',opp_items:['Systematic literature review automation','Statistical analysis and interpretation','Grant proposal drafting and editing'],curr:'Researchers use AI for writing and light search. Core data analysis stays manual.',curr_items:['Academic writing assistance','Light literature search','Data formatting']},
+  {name:'Social Services',blue:.54,red:.09,opp:'Case documentation, resource matching, outcome reporting — AI handles admin so workers focus on people.',opp_items:['Structured case notes from worker observations','Client-to-resource matching by need and eligibility','Automated funder reporting from case data'],curr:'Social workers rarely use AI. Documentation and resource matching is almost entirely manual.',curr_items:['Occasional document help','Basic web research','Email drafting']},
+  {name:'Legal',blue:.92,red:.13,opp:'The highest theoretical coverage of any profession. Research, drafting, contract review — all highly automatable. Almost nobody has moved.',opp_items:['Contract review: clause flagging in seconds','Legal research: case law in minutes not days','Drafting: NDAs, letters, standard agreements'],curr:'Lawyers use AI mostly for basic drafting. Legal research and contract review remain almost entirely manual.',curr_items:['Basic document drafting','Occasional email assistance','Light research']},
+  {name:'Education & Library',blue:.64,red:.10,opp:'Lesson planning, differentiated assessment, personalised feedback — AI multiplies teacher impact without replacing teacher judgement.',opp_items:['Full unit plans from learning objectives in 3 mins','Personalised feedback at scale','Three-level differentiation for every lesson'],curr:'Educators use AI occasionally for lesson ideas. Systematic integration is rare.',curr_items:['Occasional lesson idea generation','Light marking assistance','Admin email drafting']},
+  {name:'Arts & Media',blue:.58,red:.25,opp:'Content production, visual generation, video post-production, distribution optimisation — AI compresses the entire pipeline.',opp_items:['Full content repurposing across all channels','AI visual concepts and mood boards in minutes','Automated subtitles, transcripts, and SEO metadata'],curr:'Creatives use AI for image generation and copywriting. Systematic workflow integration lags.',curr_items:['Image generation (Midjourney, DALL-E)','Copywriting and caption drafts','Basic transcription']},
+  {name:'Healthcare Practitioners',blue:.50,red:.10,opp:'Clinical documentation, diagnostic support, patient communication — AI saves hours of admin and surfaces insights no clinician could track manually.',opp_items:['AI clinical scribe: real-time structured notes','Diagnostic support: differentials and drug interactions','Automated patient follow-up sequences'],curr:'Most clinicians don\'t use AI clinically. Documentation is entirely manual.',curr_items:['Occasional literature search','Basic administrative email','Limited patient education content']},
+  {name:'Healthcare Support',blue:.42,red:.09,opp:'Scheduling, insurance processing, patient triage, admin coordination — the operational backbone of healthcare is highly automatable.',opp_items:['Automated insurance pre-authorisation and claims tracking','AI-powered scheduling and reminder systems','Patient intake form processing and routing'],curr:'Healthcare support uses AI minimally. Scheduling and admin are entirely manual.',curr_items:['Basic scheduling software','Occasional email assistance','Template communications']},
+  {name:'Protective Service',blue:.27,red:.07,opp:'Incident reporting, pattern analysis, resource coordination — meaningful AI applications even in operational roles.',opp_items:['Automated incident reports from officer notes','Pattern analysis to predict and prevent incidents','Resource allocation optimisation across zones'],curr:'Protective services use almost no AI. Report writing and coordination are entirely manual.',curr_items:['Basic administrative writing','Occasional scheduling assistance']},
+  {name:'Food & Serving',blue:.30,red:.07,opp:'Inventory forecasting, staff scheduling, review management — meaningful savings without touching the core craft.',opp_items:['AI inventory prediction: reduce food waste 15-30%','Automated review monitoring and responses','Roster optimisation based on forecast demand'],curr:'Restaurants rarely use AI. Inventory, scheduling, and communication are almost entirely manual.',curr_items:['Occasional social media captions','Basic menu description writing']},
+  {name:'Grounds Maintenance',blue:.22,red:.04,opp:'Scheduling optimisation, quote generation, equipment tracking — AI benefits even in physical trades.',opp_items:['Automated quote generation from job photos','Predictive equipment maintenance scheduling','Client communication and follow-up automation'],curr:'Virtually no AI usage. All quoting, scheduling, and communication is manual.',curr_items:['Basic scheduling apps','Occasional email drafting']},
+  {name:'Personal Care',blue:.32,red:.08,opp:'Booking management, client history, marketing automation, product recommendations — clear AI applications throughout.',opp_items:['Automated rebooking reminders and retention sequences','Personalised product and service recommendations','Marketing content by client demographic'],curr:'Personal care professionals use AI minimally. Client management and retention is largely manual.',curr_items:['Social media caption drafting','Basic appointment reminders']},
+  {name:'Sales',blue:.44,red:.15,opp:'Prospect research, personalised outreach, post-call follow-up, pipeline analysis — AI transforms every stage when applied systematically.',opp_items:['Full prospect brief in seconds: challenges, news, talking points','Mass personalisation: every email tailored to the prospect','Post-call summary and follow-up email drafted automatically'],curr:'Salespeople use AI for email drafting and light research. Systematic personalisation is rarely automated.',curr_items:['Email drafting and editing','Occasional prospect research','LinkedIn message templates']},
+  {name:'Office & Admin',blue:.80,red:.30,opp:'Email management, scheduling, meeting notes, document processing, workflow automation — one of the most fully automatable categories.',opp_items:['AI meeting transcription and action item extraction','Email drafting and prioritisation at scale','Document processing and routing: classify, extract, route'],curr:'Admin has the highest observed usage — but still under a third of what\'s possible. Workflow automation lags.',curr_items:['Email drafting (highest of any sector)','Meeting transcription (Otter.ai, Fireflies)','Basic document formatting']},
+  {name:'Agriculture',blue:.27,red:.06,opp:'Crop yield prediction, equipment maintenance, weather-informed planning — meaningful AI leverage throughout.',opp_items:['Predictive crop yield modelling from weather and soil data','Equipment maintenance scheduling by usage patterns','Market timing support for commodity decisions'],curr:'Agriculture has almost no AI adoption. Planning and decisions remain experience-based and manual.',curr_items:['Basic weather apps','Occasional market research']},
+  {name:'Construction',blue:.36,red:.08,opp:'Quoting, scheduling, safety compliance, cost reporting — strong AI applications even in a physical industry.',opp_items:['Quote generation from specs: halve estimation time','AI safety monitoring from site photos','Automated project reporting from photos and brief notes'],curr:'Construction has very low AI adoption. Quoting, scheduling, and reporting happen manually.',curr_items:['Basic scheduling software','Occasional email drafting','Simple cost tracking spreadsheets']},
+  {name:'Installation & Repair',blue:.31,red:.07,opp:'Job quoting, parts sourcing, scheduling, technical documentation — clear AI applications for trades businesses.',opp_items:['Automated quotes from job photos and description','Parts sourcing optimisation: price and availability checking','Customer communication and follow-up automation'],curr:'Trades use almost no AI. All quoting, scheduling, and communication is manual.',curr_items:['Basic scheduling apps','Text message communication','Simple invoicing tools']},
+  {name:'Production',blue:.34,red:.08,opp:'Quality control, equipment maintenance prediction, production scheduling — AI applications throughout manufacturing.',opp_items:['Predictive maintenance: prevent downtime before it happens','AI image QC catches defects faster than human inspection','Schedule optimisation based on demand and resource availability'],curr:'Manufacturing has very low AI adoption outside large enterprises. Quality control and planning remain manual.',curr_items:['Basic MRP software','Simple inventory tracking','Occasional data reporting']},
+  {name:'Transportation',blue:.27,red:.08,opp:'Route optimisation, fleet maintenance, load planning, compliance documentation — strong AI applications in logistics.',opp_items:['Real-time route optimisation by traffic, load, and fuel','Predictive fleet maintenance from telematics data','Automated compliance documentation and hours tracking'],curr:'Transportation uses AI mainly through GPS routing. Fleet management and compliance are largely manual.',curr_items:['GPS routing (Waze, Google Maps)','Basic fleet management software','Simple compliance logs']},
+];
+
+const WRAP={
+  'Architecture & Engineering':['Architecture &','engineering'],
+  'Life & Social Sciences':['Life &','social sciences'],
+  'Healthcare Practitioners':['Healthcare','practitioners'],
+  'Healthcare Support':['Healthcare','support'],
+  'Protective Service':['Protective','service'],
+  'Food & Serving':['Food &','serving'],
+  'Grounds Maintenance':['Grounds','maintenance'],
+  'Personal Care':['Personal','care'],
+  'Office & Admin':['Office &','admin'],
+  'Installation & Repair':['Installation &','repair'],
+  'Business & Finance':['Business &','finance'],
+  'Computer & Math':['Computer &','math'],
+  'Education & Library':['Education &','library'],
+  'Arts & Media':['Arts &','media'],
+  'Social Services':['Social','services'],
+};
+
+const canvas=document.getElementById('radar');
+const ctx=canvas.getContext('2d');
+const N=IND.length;
+const DPR=window.devicePixelRatio||1;
+let SIZE=500,CX,CY,MR;
+let lHI=null,lHZ=null;
+
+function ang(i){return(i/N)*2*Math.PI-Math.PI/2;}
+function pt(v,i){const a=ang(i);return{x:CX+v*MR*Math.cos(a),y:CY+v*MR*Math.sin(a)};}
+
+function resize(){
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth-24;
+  const H=wrap.clientHeight-8;
+  SIZE=Math.min(W,H,700);
+  CX=SIZE/2;CY=SIZE/2;MR=SIZE*0.345;
+  canvas.width=Math.round(SIZE*DPR);
+  canvas.height=Math.round(SIZE*DPR);
+  canvas.style.width=SIZE+'px';
+  canvas.style.height=SIZE+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  draw(lHI,lHZ);
+}
+
+function draw(hi,hz){
+  ctx.clearRect(0,0,SIZE,SIZE);
+  ctx.fillStyle='#f2eeea';
+  ctx.fillRect(0,0,SIZE,SIZE);
+
+  // grid
+  [.2,.4,.6,.8,1].forEach(l=>{
+    ctx.beginPath();ctx.arc(CX,CY,l*MR,0,2*Math.PI);
+    ctx.strokeStyle=l===1?'#c5c0b8':'#dbd7d0';
+    ctx.lineWidth=l===1?.9:.5;ctx.stroke();
+    if(l<1){
+      ctx.fillStyle='#a5a098';
+      ctx.font=`${Math.max(9,SIZE*.017)}px DM Sans,sans-serif`;
+      ctx.textAlign='center';
+      ctx.fillText(l.toFixed(1),CX+3,CY-l*MR+SIZE*.013);
+    }
+  });
+
+  // spokes
+  for(let i=0;i<N;i++){
+    const e=pt(1,i);
+    ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(e.x,e.y);
+    ctx.strokeStyle='#dbd7d0';ctx.lineWidth=.4;ctx.stroke();
+  }
+
+  // sector glow
+  if(hi!==null){
+    const a1=ang(hi)-Math.PI/N,a2=ang(hi)+Math.PI/N;
+    ctx.beginPath();ctx.moveTo(CX,CY);ctx.arc(CX,CY,MR*1.1,a1,a2);ctx.closePath();
+    ctx.fillStyle=hz==='blue'?'rgba(91,155,213,0.08)':'rgba(192,80,77,0.08)';ctx.fill();
+  }
+
+  // blue fill
+  ctx.beginPath();
+  IND.forEach((d,i)=>{const p=pt(d.blue,i);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});
+  ctx.closePath();
+  ctx.fillStyle=hz==='blue'?'rgba(91,155,213,0.22)':'rgba(91,155,213,0.15)';ctx.fill();
+  ctx.strokeStyle='#5b9bd5';ctx.lineWidth=SIZE*.0022;ctx.stroke();
+
+  // blue dots
+  IND.forEach((d,i)=>{
+    const p=pt(d.blue,i);const r=hi===i?SIZE*.009:SIZE*.0058;
+    ctx.beginPath();ctx.arc(p.x,p.y,r,0,2*Math.PI);
+    ctx.fillStyle='#5b9bd5';ctx.fill();
+    ctx.strokeStyle='#f2eeea';ctx.lineWidth=SIZE*.0025;ctx.stroke();
+  });
+
+  // red fill
+  ctx.beginPath();
+  IND.forEach((d,i)=>{const p=pt(d.red,i);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});
+  ctx.closePath();
+  ctx.fillStyle=hz==='red'?'rgba(192,80,77,0.28)':'rgba(192,80,77,0.20)';ctx.fill();
+  ctx.strokeStyle='#c0504d';ctx.lineWidth=SIZE*.0022;ctx.stroke();
+
+  // red squares
+  IND.forEach((d,i)=>{
+    const p=pt(d.red,i);const s=hi===i?SIZE*.012:SIZE*.009;
+    ctx.fillStyle='#c0504d';ctx.fillRect(p.x-s/2,p.y-s/2,s,s);
+    ctx.strokeStyle='#f2eeea';ctx.lineWidth=SIZE*.0022;ctx.strokeRect(p.x-s/2,p.y-s/2,s,s);
+  });
+
+  // labels
+  const FS=Math.max(9,SIZE*.021);
+  const LR=MR+SIZE*.065;
+  const LH=FS*1.22;
+  ctx.textAlign='center';
+  IND.forEach((d,i)=>{
+    const a=ang(i);
+    const lx=CX+LR*Math.cos(a);
+    const ly=CY+LR*Math.sin(a);
+    const isH=hi===i;
+    ctx.fillStyle=isH?'#111':'#6a6460';
+    ctx.font=`${isH?'500 ':''}${FS}px DM Sans,sans-serif`;
+    const lines=WRAP[d.name]||[d.name];
+    const top=ly-(lines.length-1)*LH/2;
+    lines.forEach((ln,j)=>ctx.fillText(ln,lx,top+j*LH+FS*.35));
+  });
+
+  // legend
+  const tFS=Math.max(8.5,SIZE*.018);
+  const lxR=SIZE*.985;const lyR=SIZE*.975;const gap2=tFS*1.6;
+  const ir=tFS*.52;
+  ctx.font=`${tFS}px DM Sans,sans-serif`;ctx.textAlign='right';
+  ctx.fillStyle='#6a6460';ctx.fillText('Theoretical AI coverage',lxR,lyR-gap2);
+  const w1=ctx.measureText('Theoretical AI coverage').width;
+  ctx.beginPath();ctx.arc(lxR-w1-tFS*.9,lyR-gap2-ir*.3,ir,0,2*Math.PI);
+  ctx.fillStyle='#5b9bd5';ctx.fill();ctx.strokeStyle='#f2eeea';ctx.lineWidth=SIZE*.002;ctx.stroke();
+  ctx.font=`${tFS}px DM Sans,sans-serif`;ctx.textAlign='right';
+  ctx.fillStyle='#6a6460';ctx.fillText('Observed AI coverage',lxR,lyR);
+  const w2=ctx.measureText('Observed AI coverage').width;
+  const ss=ir*1.7;const rx=lxR-w2-tFS*.9-ss*.5;const ry=lyR-ss*.85;
+  ctx.fillStyle='#c0504d';ctx.fillRect(rx-ss/2,ry,ss,ss);
+  ctx.strokeStyle='#f2eeea';ctx.lineWidth=SIZE*.002;ctx.strokeRect(rx-ss/2,ry,ss,ss);
+}
+
+// ── HIT TEST ──────────────────────────────────────────────────────────────
+function hitTest(mx,my){
+  const r=canvas.getBoundingClientRect();
+  const x=(mx-r.left)*(SIZE/r.width);
+  const y=(my-r.top)*(SIZE/r.height);
+  const dx=x-CX,dy=y-CY;
+  const dist=Math.sqrt(dx*dx+dy*dy)/MR;
+  if(dist>1.1)return null;
+  const rawA=Math.atan2(dy,dx);
+  const normA=((rawA+Math.PI/2)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  const idx=Math.floor(normA/(2*Math.PI/N))%N;
+  const t=(normA-idx*(2*Math.PI/N))/(2*Math.PI/N);
+  const nx=(idx+1)%N;
+  const bV=IND[idx].blue*(1-t)+IND[nx].blue*t;
+  const rV=IND[idx].red*(1-t)+IND[nx].red*t;
+  const zone=dist<=rV?'red':dist<=bV?'blue':null;
+  return{idx,zone};
+}
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────
+const tt=document.getElementById('tooltip');
+const ttZone=document.getElementById('ttZone');
+const ttName=document.getElementById('ttName');
+const ttBlue=document.getElementById('ttBlue');
+const ttRed=document.getElementById('ttRed');
+const ttGap=document.getElementById('ttGap');
+const ttHeading=document.getElementById('ttHeading');
+const ttDesc=document.getElementById('ttDesc');
+const ttItems=document.getElementById('ttItems');
+
+function positionTooltip(mx,my){
+  const W=window.innerWidth,H=window.innerHeight;
+  const TW=252,TH=280;
+  let tx=mx+18,ty=my-20;
+  if(tx+TW>W-10)tx=mx-TW-18;
+  if(ty+TH>H-10)ty=H-TH-10;
+  if(ty<10)ty=10;
+  tt.style.left=tx+'px';
+  tt.style.top=ty+'px';
+}
+
+function showTooltip(h,mx,my){
+  if(!h||!h.zone){tt.style.opacity='0';return;}
+  const d=IND[h.idx];const isB=h.zone==='blue';
+  const gap=Math.round((d.blue-d.red)*100);
+  ttZone.className='tt-zone '+h.zone;
+  ttZone.textContent=isB?'⚡ The Opportunity':'📊 Current Usage';
+  ttName.textContent=d.name;
+  ttBlue.textContent=Math.round(d.blue*100)+'%';
+  ttRed.textContent=Math.round(d.red*100)+'%';
+  ttGap.textContent=gap+'%';
+  ttHeading.textContent=isB?'What AI can do here':'What\'s actually being used';
+  ttDesc.textContent=isB?d.opp:d.curr;
+  ttItems.innerHTML=(isB?d.opp_items:d.curr_items).map(it=>
+    `<div class="tt-item"><div class="tt-bullet ${h.zone}"></div><span>${it}</span></div>`).join('');
+  positionTooltip(mx,my);
+  tt.style.opacity='1';
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────
+canvas.addEventListener('mousemove',e=>{
+  const h=hitTest(e.clientX,e.clientY);
+  const idx=h?.zone?h.idx:null;const zone=h?.zone||null;
+  canvas.style.cursor=zone?'pointer':'crosshair';
+  if(idx!==lHI||zone!==lHZ){lHI=idx;lHZ=zone;draw(idx,zone);}
+  showTooltip(zone?h:null,e.clientX,e.clientY);
+});
+
+canvas.addEventListener('mouseleave',()=>{
+  lHI=null;lHZ=null;
+  canvas.style.cursor='crosshair';
+  tt.style.opacity='0';
+  draw(null,null);
+});
+
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();const t=e.touches[0];
+  const h=hitTest(t.clientX,t.clientY);
+  if(h?.zone){lHI=h.idx;lHZ=h.zone;draw(h.idx,h.zone);showTooltip(h,t.clientX,t.clientY);}
+},{passive:false});
+
+window.addEventListener('resize',resize);
+window.addEventListener('load',resize);
+resize();
+</script>
+</body>
+</html>
