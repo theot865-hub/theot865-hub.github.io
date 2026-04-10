@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Pulse — Taylor Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f9f9f8;--white:#ffffff;--border:#e8e5e0;--border-mid:#d0ccc5;
+  --text:#18181b;--muted:#78716c;--faint:#b4afa9;--accent-light:#f4f4f5;
+  --green:#166534;--green-bg:#f0fdf4;--green-mid:#16a34a;
+  --amber:#92400e;--amber-bg:#fffbeb;--amber-mid:#d97706;
+  --blue:#1e40af;--blue-bg:#eff6ff;--blue-mid:#3b82f6;
+  --purple:#6b21a8;--purple-bg:#faf5ff;--purple-mid:#9333ea;
+  --red:#991b1b;--red-bg:#fef2f2;
+  --r:12px;--r-sm:8px;--r-full:999px;
+  --shadow:0 1px 4px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 2px 4px rgba(0,0,0,0.04);
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.6;}
+
+nav{background:var(--white);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);}
+.nav-brand{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text);cursor:pointer;}
+.nav-brand span{font-style:italic;color:var(--muted);}
+.nav-tabs{display:flex;gap:2px;}
+.nav-tab{padding:7px 16px;border-radius:var(--r-full);border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.15s;position:relative;}
+.nav-tab:hover{color:var(--text);background:var(--accent-light);}
+.nav-tab.active{color:var(--white);background:var(--text);}
+.nav-tab .live-dot{position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--green-mid);display:none;}
+.nav-tab .live-dot.visible{display:block;animation:livePulse 2s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+.nav-right{font-size:11px;font-weight:500;letter-spacing:0.1em;color:var(--faint);text-transform:uppercase;}
+
+.page{display:none;}
+.page.active{display:block;animation:fadeUp 0.22s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SHARED ── */
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:700;line-height:1.08;margin-bottom:14px;}
+.page-title em{font-style:italic;color:var(--muted);}
+.page-sub{font-size:0.95rem;color:var(--muted);max-width:460px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:14px;}
+.error-msg{display:none;padding:14px 18px;background:var(--red-bg);border:1px solid #fecaca;border-radius:var(--r-sm);font-size:13px;color:var(--red);margin-top:16px;}
+.error-msg.visible{display:block;}
+
+/* Cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:10px;transition:all 0.15s;opacity:0;transform:translateY(6px);animation:cardIn 0.35s forwards;}
+.card:nth-child(2){animation-delay:0.05s;}.card:nth-child(3){animation-delay:0.1s;}.card:nth-child(4){animation-delay:0.15s;}.card:nth-child(5){animation-delay:0.2s;}
+@keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+.card:hover{border-color:var(--border-mid);box-shadow:var(--shadow-md);}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.card-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--faint);flex-shrink:0;margin-top:2px;}
+.card-badge{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:var(--r-full);flex-shrink:0;}
+.badge-news{background:var(--blue-bg);color:var(--blue);}
+.badge-tutorial{background:var(--green-bg);color:var(--green);}
+.badge-tool{background:var(--amber-bg);color:var(--amber);}
+.card-title{font-size:1rem;font-weight:600;line-height:1.4;margin-bottom:8px;}
+.card-body{font-size:13.5px;color:var(--muted);line-height:1.75;margin-bottom:12px;}
+.card-divider{height:1px;background:var(--border);margin-bottom:12px;}
+.card-takeaway{font-size:13px;color:var(--text);font-weight:500;padding-left:12px;border-left:2px solid var(--border-mid);line-height:1.6;}
+.card-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.card-tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:var(--r-full);background:var(--accent-light);color:var(--muted);}
+
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,#f0ede8 25%,#e8e5e0 50%,#f0ede8 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── BRIEFING ── */
+.briefing-hero{background:var(--white);border-bottom:1px solid var(--border);padding:52px 28px 44px;text-align:center;}
+.briefing-body{max-width:860px;margin:0 auto;padding:36px 28px 80px;}
+.niche-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:16px;}
+@media(max-width:680px){.niche-grid{grid-template-columns:repeat(3,1fr);}}
+.niche-btn{padding:13px 8px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:center;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+.niche-btn:hover{border-color:var(--border-mid);box-shadow:var(--shadow);}
+.niche-btn.selected{border-color:var(--text);background:var(--text);}
+.niche-btn.selected .nb-icon,.niche-btn.selected .nb-name{color:#fff;}
+.nb-icon{font-size:20px;display:block;margin-bottom:4px;}
+.nb-name{font-size:11px;font-weight:500;color:var(--text);}
+.custom-row{display:flex;gap:10px;margin:16px 0 24px;}
+.custom-input{flex:1;padding:11px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--white);color:var(--text);outline:none;transition:border-color 0.15s;}
+.custom-input:focus{border-color:var(--text);}
+.custom-input::placeholder{color:var(--faint);}
+.depth-row{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+.depth-btn{padding:7px 16px;border:1.5px solid var(--border);border-radius:var(--r-full);background:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.depth-btn.selected{border-color:var(--text);background:var(--text);color:#fff;}
+.gen-btn{width:100%;padding:14px;background:var(--text);color:#fff;border:none;border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.gen-btn:hover:not(:disabled){background:#3f3f46;transform:translateY(-1px);}
+.gen-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.loading-block{display:none;margin-top:32px;}
+.loading-block.visible{display:block;}
+.loading-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:36px;text-align:center;}
+.loading-steps{display:flex;flex-direction:column;gap:12px;margin:20px 0;text-align:left;max-width:320px;margin-left:auto;margin-right:auto;}
+.loading-step{display:flex;align-items:center;gap:10px;font-size:13px;}
+.lstep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lstep-dot.done{background:var(--green-mid);}
+.lstep-dot.active{background:var(--amber-mid);animation:dotPulse 0.8s ease-in-out infinite;}
+.lstep-dot.wait{background:var(--border);}
+@keyframes dotPulse{0%,100%{opacity:0.4}50%{opacity:1}}
+.loading-bar-bg{width:100%;height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-top:20px;}
+.loading-bar-fill{height:100%;background:var(--text);border-radius:1px;transition:width 0.5s ease;}
+.results-block{display:none;margin-top:32px;}
+.results-block.visible{display:block;}
+.results-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.results-heading{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;}
+.results-heading em{font-style:italic;color:var(--muted);}
+.reset-btn{font-size:12px;color:var(--muted);background:none;border:1px solid var(--border);padding:6px 14px;border-radius:var(--r-full);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.reset-btn:hover{color:var(--text);border-color:var(--border-mid);}
+.content-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);}
+.ctab{padding:9px 18px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
+.ctab:hover{color:var(--text);}
+.ctab.active{color:var(--text);border-bottom-color:var(--text);font-weight:600;}
+.content-section{display:none;}
+.content-section.active{display:block;}
+
+/* ── EXPLORE ── */
+.explore-hero{background:var(--white);border-bottom:1px solid var(--border);padding:48px 28px 36px;text-align:center;}
+.explore-body{max-width:960px;margin:0 auto;padding:36px 28px 80px;}
+.explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:700px){.explore-grid{grid-template-columns:1fr;}}
+.explore-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:22px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.explore-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0;}
+.explore-card.ec-blue::before{background:var(--blue-mid);}
+.explore-card.ec-green::before{background:var(--green-mid);}
+.explore-card.ec-amber::before{background:var(--amber-mid);}
+.explore-card.ec-purple::before{background:var(--purple-mid);}
+.explore-card:hover{border-color:var(--border-mid);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.ec-icon{font-size:26px;margin-bottom:10px;display:block;}
+.ec-title{font-weight:600;font-size:0.95rem;margin-bottom:6px;}
+.ec-desc{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.ec-teaser{font-size:12px;color:var(--text);font-weight:500;line-height:1.5;padding:10px 12px;background:var(--bg);border-radius:var(--r-sm);border-left:2px solid var(--border-mid);margin-bottom:12px;min-height:38px;}
+.ec-teaser.loading{background:transparent;border:none;padding:0;}
+.ec-teaser .skeleton{height:12px;width:90%;margin-bottom:6px;}
+.ec-teaser .skeleton:last-child{width:60%;}
+.ec-footer{display:flex;align-items:center;justify-content:space-between;}
+.ec-live-tag{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:4px;}
+.ec-live-dot{width:5px;height:5px;border-radius:50%;background:var(--green-mid);}
+.ec-arrow{font-size:16px;color:var(--faint);transition:all 0.15s;}
+.explore-card:hover .ec-arrow{color:var(--text);transform:translateX(3px);}
+
+.explore-result{display:none;margin-top:32px;}
+.explore-result.visible{display:block;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);background:none;border:1px solid var(--border);padding:7px 16px;border-radius:var(--r-full);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:24px;transition:all 0.15s;}
+.back-btn:hover{color:var(--text);border-color:var(--border-mid);}
+
+/* ── GET WOWED ── */
+.wowed-hero{background:var(--text);padding:60px 28px;text-align:center;position:relative;overflow:hidden;}
+.wowed-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.wowed-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.6rem);font-weight:700;color:#fff;line-height:1.08;margin-bottom:14px;position:relative;z-index:1;}
+.wowed-title em{font-style:italic;color:rgba(255,255,255,0.45);}
+.wowed-sub{font-size:0.95rem;color:rgba(255,255,255,0.5);max-width:420px;margin:0 auto 32px;position:relative;z-index:1;}
+.wowed-btn{padding:16px 44px;background:#fff;color:var(--text);border:none;border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;position:relative;z-index:1;}
+.wowed-btn:hover:not(:disabled){background:#f4f4f5;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+.wowed-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.wowed-ready-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(22,163,74,0.2);border:1px solid rgba(22,163,74,0.3);color:rgba(255,255,255,0.8);font-size:11px;font-weight:500;padding:4px 12px;border-radius:var(--r-full);margin-bottom:20px;position:relative;z-index:1;opacity:0;transition:opacity 0.4s;}
+.wowed-ready-tag.visible{opacity:1;}
+.wrt-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;}
+.wowed-body{max-width:680px;margin:0 auto;padding:40px 28px 80px;}
+.wowed-spinner-wrap{display:none;text-align:center;padding:48px 0;}
+.wowed-spinner-wrap.visible{display:block;}
+.wowed-spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wow-card{display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-md);}
+.wow-card.visible{display:block;animation:cardIn 0.4s forwards;}
+.wow-card-header{background:var(--text);padding:28px 28px 24px;}
+.wow-tag-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:var(--r-full);margin-bottom:14px;}
+.wow-headline{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;color:#fff;line-height:1.2;margin-bottom:8px;}
+.wow-industry-tag{font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;text-transform:uppercase;letter-spacing:0.08em;}
+.wow-card-body{padding:28px;}
+.wow-section-lbl{font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+.wow-explanation{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:24px;}
+.wow-why{background:var(--accent-light);border-radius:var(--r-sm);padding:18px 20px;margin-bottom:24px;font-size:14px;color:var(--text);line-height:1.7;}
+.wow-implications{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.wow-impl{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--muted);line-height:1.6;}
+.wow-impl-dot{width:5px;height:5px;border-radius:50%;background:var(--border-mid);flex-shrink:0;margin-top:8px;}
+.wow-footer{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid var(--border);}
+.wow-again-btn{padding:10px 24px;background:var(--text);color:#fff;border:none;border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.wow-again-btn:hover{background:#3f3f46;}
+.wow-freshness{font-size:11px;color:var(--faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand" onclick="switchPage('briefing')">AI <span>Pulse</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-briefing" onclick="switchPage('briefing')">My Briefing</button>
+    <button class="nav-tab" id="tab-explore" onclick="switchPage('explore')">Explore<div class="live-dot" id="explore-dot"></div></button>
+    <button class="nav-tab" id="tab-wowed" onclick="switchPage('wowed')">Get Wowed<div class="live-dot" id="wowed-dot"></div></button>
+  </div>
+  <div class="nav-right">Taylor Intelligence</div>
+</nav>
+
+<!-- ══ BRIEFING ══ -->
+<div class="page active" id="page-briefing">
+  <div class="briefing-hero">
+    <div class="eyebrow">Your personalised AI briefing</div>
+    <h1 class="page-title">What's happening in AI<br><em>for your world?</em></h1>
+    <p class="page-sub">Pick your industry. Get live AI news, tutorials, and tools — specific to what you actually do.</p>
+  </div>
+  <div class="briefing-body">
+    <div class="section-label">Pick your niche</div>
+    <div class="niche-grid">
+      <button class="niche-btn" onclick="selNiche(this,'Restaurants & Hospitality')"><span class="nb-icon">🍽️</span><span class="nb-name">Restaurants</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Healthcare & Medicine')"><span class="nb-icon">🏥</span><span class="nb-name">Healthcare</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Real Estate')"><span class="nb-icon">🏠</span><span class="nb-name">Real Estate</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Legal & Law Firms')"><span class="nb-icon">⚖️</span><span class="nb-name">Legal</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Marketing & Advertising')"><span class="nb-icon">📣</span><span class="nb-name">Marketing</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'E-commerce & Retail')"><span class="nb-icon">🛒</span><span class="nb-name">E-commerce</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Finance & Accounting')"><span class="nb-icon">📊</span><span class="nb-name">Finance</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Trades & Construction')"><span class="nb-icon">🔧</span><span class="nb-name">Trades</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Education & Schools')"><span class="nb-icon">📚</span><span class="nb-name">Education</span></button>
+      <button class="niche-btn" onclick="selNiche(this,'Property Management')"><span class="nb-icon">🏗️</span><span class="nb-name">Property Mgmt</span></button>
+    </div>
+    <div class="custom-row">
+      <input class="custom-input" id="customInput" placeholder="Or type your own — e.g. physiotherapy, logistics, accounting…" oninput="clearNicheSelected()">
+    </div>
+    <div class="section-label">Depth</div>
+    <div class="depth-row">
+      <button class="depth-btn selected" onclick="selDepth('quick',this)">Quick scan — 3 per section</button>
+      <button class="depth-btn" onclick="selDepth('deep',this)">Deep dive — 5 per section</button>
+    </div>
+    <button class="gen-btn" id="genBtn" onclick="generateBriefing()">Generate My Briefing →</button>
+    <div class="error-msg" id="briefing-error"></div>
+    <div class="loading-block" id="briefingLoading">
+      <div class="loading-card">
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Searching the web…</div>
+        <div style="font-size:13px;color:var(--muted);">This takes about 15 seconds — doing a live search</div>
+        <div class="loading-steps">
+          <div class="loading-step"><div class="lstep-dot active" id="dot0"></div><span id="step0" style="color:var(--text)">Finding latest AI news for your industry</span></div>
+          <div class="loading-step"><div class="lstep-dot wait" id="dot1"></div><span id="step1" style="color:var(--faint)">Locating tutorials and guides</span></div>
+          <div class="loading-step"><div class="lstep-dot wait" id="dot2"></div><span id="step2" style="color:var(--faint)">Identifying top AI tools</span></div>
+          <div class="loading-step"><div class="lstep-dot wait" id="dot3"></div><span id="step3" style="color:var(--faint)">Assembling your briefing</span></div>
+        </div>
+        <div class="loading-bar-bg"><div class="loading-bar-fill" id="loadBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="results-block" id="briefingResults">
+      <div class="results-meta">
+        <div class="results-heading">AI in <em id="resultsNiche">your industry</em></div>
+        <button class="reset-btn" onclick="resetBriefing()">← New briefing</button>
+      </div>
+      <div class="content-tabs">
+        <button class="ctab active" onclick="switchCtab('news',this)">Latest News</button>
+        <button class="ctab" onclick="switchCtab('tutorials',this)">Tutorials</button>
+        <button class="ctab" onclick="switchCtab('tools',this)">Tools</button>
+      </div>
+      <div class="content-section active" id="ctab-news"><div id="newsCards"></div></div>
+      <div class="content-section" id="ctab-tutorials"><div id="tutorialCards"></div></div>
+      <div class="content-section" id="ctab-tools"><div id="toolCards"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPLORE ══ -->
+<div class="page" id="page-explore">
+  <div class="explore-hero">
+    <div class="eyebrow">Discover</div>
+    <h1 class="page-title">Explore AI by <em>industry</em></h1>
+    <p class="page-sub">Tap any industry for a live AI briefing. Headlines loading in the background.</p>
+  </div>
+  <div class="explore-body">
+    <div class="explore-grid" id="exploreGrid">
+      <div class="explore-card ec-blue" onclick="exploreNiche('Restaurants & Hospitality')"><span class="ec-icon">🍽️</span><div class="ec-title">Restaurants & Hospitality</div><div class="ec-desc">AI ordering, dynamic pricing, and kitchen automation.</div><div class="ec-teaser loading" id="teaser-0"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-green" onclick="exploreNiche('Healthcare & Medicine')"><span class="ec-icon">🏥</span><div class="ec-title">Healthcare</div><div class="ec-desc">Diagnostic AI, patient triage, and clinical documentation.</div><div class="ec-teaser loading" id="teaser-1"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-amber" onclick="exploreNiche('Real Estate')"><span class="ec-icon">🏠</span><div class="ec-title">Real Estate</div><div class="ec-desc">Automated valuations, lead qualification, and market analysis.</div><div class="ec-teaser loading" id="teaser-2"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-purple" onclick="exploreNiche('Legal & Law Firms')"><span class="ec-icon">⚖️</span><div class="ec-title">Legal</div><div class="ec-desc">Contract review, legal research, and compliance monitoring.</div><div class="ec-teaser loading" id="teaser-3"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-blue" onclick="exploreNiche('Marketing & Advertising')"><span class="ec-icon">📣</span><div class="ec-title">Marketing</div><div class="ec-desc">Personalised campaigns, creative generation, and analytics.</div><div class="ec-teaser loading" id="teaser-4"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-green" onclick="exploreNiche('Finance & Accounting')"><span class="ec-icon">📊</span><div class="ec-title">Finance</div><div class="ec-desc">Fraud detection, automated bookkeeping, and forecasting.</div><div class="ec-teaser loading" id="teaser-5"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-amber" onclick="exploreNiche('Trades & Construction')"><span class="ec-icon">🔧</span><div class="ec-title">Trades & Construction</div><div class="ec-desc">Job quoting, scheduling, safety, and predictive maintenance.</div><div class="ec-teaser loading" id="teaser-6"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-purple" onclick="exploreNiche('Education & Schools')"><span class="ec-icon">📚</span><div class="ec-title">Education</div><div class="ec-desc">Personalised learning, automated grading, and tutoring agents.</div><div class="ec-teaser loading" id="teaser-7"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+      <div class="explore-card ec-blue" onclick="exploreNiche('E-commerce & Retail')"><span class="ec-icon">🛒</span><div class="ec-title">E-commerce</div><div class="ec-desc">Recommendation engines, inventory forecasting, and pricing AI.</div><div class="ec-teaser loading" id="teaser-8"><div class="skeleton" style="height:12px;width:88%;margin-bottom:5px;"></div><div class="skeleton" style="height:12px;width:55%;"></div></div><div class="ec-footer"><div class="ec-live-tag"><div class="ec-live-dot"></div>Live</div><div class="ec-arrow">→</div></div></div>
+    </div>
+    <div class="explore-result" id="exploreResult">
+      <button class="back-btn" onclick="backToExplore()">← Back</button>
+      <div class="results-heading" style="margin-bottom:24px;">AI in <em id="exploreNicheTitle">industry</em></div>
+      <div class="error-msg" id="explore-error"></div>
+      <div class="loading-block" id="exploreLoading">
+        <div class="loading-card">
+          <div style="font-size:14px;font-weight:500;">Loading full briefing…</div>
+          <div class="loading-bar-bg" style="margin-top:16px;"><div class="loading-bar-fill" id="exploreLoadBar" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div id="exploreCards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GET WOWED ══ -->
+<div class="page" id="page-wowed">
+  <div class="wowed-hero">
+    <div class="wowed-ready-tag" id="wowedReadyTag"><div class="wrt-dot"></div>Content ready — loaded in the background</div>
+    <div class="eyebrow" style="color:rgba(255,255,255,0.4);margin-bottom:14px;">Something you didn't know was possible</div>
+    <h1 class="wowed-title">Get <em>wowed.</em></h1>
+    <p class="wowed-sub">One button. The most mind-blowing AI development from the past week. No context needed.</p>
+    <button class="wowed-btn" id="wowBtn" onclick="showWowed()">Show me something incredible →</button>
+  </div>
+  <div class="wowed-body">
+    <div class="wowed-spinner-wrap" id="wowSpinner">
+      <div class="wowed-spinner"></div>
+      <div style="font-size:13px;color:var(--muted);" id="wowSpinText">Loading something surprising…</div>
+    </div>
+    <div class="wow-card" id="wowCard">
+      <div class="wow-card-header">
+        <div class="wow-tag-pill" id="wowTag">AI breakthrough</div>
+        <div class="wow-headline" id="wowHeadline"></div>
+        <div class="wow-industry-tag" id="wowIndustry"></div>
+      </div>
+      <div class="wow-card-body">
+        <div class="wow-section-lbl">What happened</div>
+        <div class="wow-explanation" id="wowExplanation"></div>
+        <div class="wow-section-lbl">Why it matters</div>
+        <div class="wow-why" id="wowWhy"></div>
+        <div class="wow-section-lbl">What it means going forward</div>
+        <div class="wow-implications" id="wowImplications"></div>
+        <div class="wow-footer">
+          <button class="wow-again-btn" onclick="fetchFreshWow()">Wow me again →</button>
+          <div class="wow-freshness">Live web search · Updated now</div>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="wow-error"></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────
+let selectedNiche = '';
+let selectedDepth = 'quick';
+let preloadedWow = null;
+let wowPreloading = true;
+let exploreTeaser = {};
+let exploreTeaserLoading = true;
+
+const EXPLORE_NICHES = [
+  'Restaurants & Hospitality','Healthcare & Medicine','Real Estate',
+  'Legal & Law Firms','Marketing & Advertising','Finance & Accounting',
+  'Trades & Construction','Education & Schools','E-commerce & Retail'
+];
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('tab-' + page).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── PRELOAD ON PAGE LOAD ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  preloadWow();
+  preloadExploreTeasers();
+});
+
+async function preloadWow() {
+  wowPreloading = true;
+  try {
+    const data = await callAPI(wowPrompt(), null);
+    if (data) {
+      preloadedWow = data;
+      wowPreloading = false;
+      document.getElementById('wowed-dot').classList.add('visible');
+      document.getElementById('wowedReadyTag').classList.add('visible');
+    }
+  } catch(e) { wowPreloading = false; }
+}
+
+async function preloadExploreTeasers() {
+  try {
+    const prompt = `Search the web for the single most interesting recent AI development for each of these industries. Return ONLY JSON, no markdown:
+{
+  "teasers": [
+    {"niche": "Restaurants & Hospitality", "headline": "one short punchy sentence, max 12 words"},
+    {"niche": "Healthcare & Medicine", "headline": "..."},
+    {"niche": "Real Estate", "headline": "..."},
+    {"niche": "Legal & Law Firms", "headline": "..."},
+    {"niche": "Marketing & Advertising", "headline": "..."},
+    {"niche": "Finance & Accounting", "headline": "..."},
+    {"niche": "Trades & Construction", "headline": "..."},
+    {"niche": "Education & Schools", "headline": "..."},
+    {"niche": "E-commerce & Retail", "headline": "..."}
+  ]
+}
+Be specific and current. Use web search.`;
+
+    const data = await callAPI(prompt, null);
+    if (data && data.teasers) {
+      data.teasers.forEach((t, i) => {
+        exploreTeaser[t.niche] = t.headline;
+        const el = document.getElementById('teaser-' + i);
+        if (el) {
+          el.classList.remove('loading');
+          el.innerHTML = t.headline;
+        }
+      });
+      document.getElementById('explore-dot').classList.add('visible');
+      exploreTeaserLoading = false;
+    }
+  } catch(e) { exploreTeaserLoading = false; }
+}
+
+// ── BRIEFING ──────────────────────────────────────────────────────────────
+function selNiche(btn, niche) {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedNiche = niche;
+  document.getElementById('customInput').value = '';
+}
+function clearNicheSelected() {
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('selected'));
+  selectedNiche = '';
+}
+function selDepth(d, btn) {
+  selectedDepth = d;
+  document.querySelectorAll('.depth-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function switchCtab(tab, btn) {
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ctab-' + tab).classList.add('active');
+}
+
+function startLoadingSteps() {
+  const delays = [0, 4000, 8000, 12000];
+  const percents = [15, 40, 70, 88];
+  const bar = document.getElementById('loadBar');
+  delays.forEach((d, i) => {
+    setTimeout(() => {
+      if (i > 0) {
+        document.getElementById('dot'+(i-1)).className = 'lstep-dot done';
+        document.getElementById('step'+(i-1)).style.color = 'var(--muted)';
+      }
+      if (document.getElementById('dot'+i)) {
+        document.getElementById('dot'+i).className = 'lstep-dot active';
+        document.getElementById('step'+i).style.color = 'var(--text)';
+      }
+      bar.style.width = percents[i] + '%';
+    }, d);
+  });
+}
+
+async function generateBriefing() {
+  const custom = document.getElementById('customInput').value.trim();
+  const niche = selectedNiche || custom;
+  if (!niche) { showError('briefing-error', 'Pick a niche or type your own.'); return; }
+
+  const count = selectedDepth === 'deep' ? 5 : 3;
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('briefingLoading').classList.add('visible');
+  document.getElementById('briefingResults').classList.remove('visible');
+  showError('briefing-error', '');
+  document.getElementById('loadBar').style.width = '0%';
+  startLoadingSteps();
+
+  const data = await callAPI(briefingPrompt(niche, count), 'briefing-error');
+  document.getElementById('loadBar').style.width = '100%';
+  document.getElementById('briefingLoading').classList.remove('visible');
+  document.getElementById('genBtn').disabled = false;
+  if (!data) return;
+
+  document.getElementById('resultsNiche').textContent = niche;
+  renderCards('newsCards', data.news, 'badge-news', 'News');
+  renderCards('tutorialCards', data.tutorials, 'badge-tutorial', 'Tutorial');
+  renderCards('toolCards', data.tools, 'badge-tool', 'Tool');
+  document.getElementById('briefingResults').classList.add('visible');
+  document.getElementById('briefingResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.ctab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  document.querySelectorAll('.content-section').forEach((s, i) => s.classList.toggle('active', i === 0));
+}
+
+function resetBriefing() {
+  document.getElementById('briefingResults').classList.remove('visible');
+  document.getElementById('genBtn').disabled = false;
+  selectedNiche = '';
+  document.getElementById('customInput').value = '';
+  document.querySelectorAll('.niche-btn').forEach(b => b.classList.remove('selected'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── EXPLORE ───────────────────────────────────────────────────────────────
+async function exploreNiche(niche) {
+  document.getElementById('exploreGrid').style.display = 'none';
+  document.getElementById('exploreResult').classList.add('visible');
+  document.getElementById('exploreNicheTitle').textContent = niche;
+  document.getElementById('exploreLoading').classList.add('visible');
+  document.getElementById('exploreCards').innerHTML = '';
+  showError('explore-error', '');
+
+  animateBar('exploreLoadBar', niche);
+  const data = await callAPI(briefingPrompt(niche, 3), 'explore-error');
+  document.getElementById('exploreLoading').classList.remove('visible');
+  if (!data) return;
+
+  const all = [
+    ...data.news.map(i => ({...i, type:'news'})),
+    ...data.tutorials.map(i => ({...i, type:'tutorial'})),
+    ...data.tools.map(i => ({...i, type:'tool'})),
+  ];
+  document.getElementById('exploreCards').innerHTML = all.map((item, i) => {
+    const bc = item.type==='news'?'badge-news':item.type==='tutorial'?'badge-tutorial':'badge-tool';
+    const bl = item.type==='news'?'News':item.type==='tutorial'?'Tutorial':'Tool';
+    return cardHTML(item, bc, bl, i+1);
+  }).join('');
+}
+
+function backToExplore() {
+  document.getElementById('exploreGrid').style.display = 'grid';
+  document.getElementById('exploreResult').classList.remove('visible');
+}
+
+function animateBar(barId, niche) {
+  const bar = document.getElementById(barId);
+  bar.style.width = '0%';
+  let w = 0;
+  const t = setInterval(() => {
+    w = Math.min(w + 2.5, 88);
+    bar.style.width = w + '%';
+    if (w >= 88) clearInterval(t);
+  }, 300);
+}
+
+// ── GET WOWED ─────────────────────────────────────────────────────────────
+function showWowed() {
+  if (preloadedWow) {
+    renderWow(preloadedWow);
+    preloadedWow = null;
+    // Preload next one silently in background
+    setTimeout(() => preloadWow(), 500);
+  } else {
+    // Still loading — show spinner
+    document.getElementById('wowBtn').disabled = true;
+    document.getElementById('wowSpinner').classList.add('visible');
+    document.getElementById('wowCard').classList.remove('visible');
+    const check = setInterval(() => {
+      if (preloadedWow && !wowPreloading) {
+        clearInterval(check);
+        document.getElementById('wowSpinner').classList.remove('visible');
+        document.getElementById('wowBtn').disabled = false;
+        renderWow(preloadedWow);
+        preloadedWow = null;
+        setTimeout(() => preloadWow(), 500);
+      }
+    }, 400);
+  }
+}
+
+async function fetchFreshWow() {
+  document.getElementById('wowCard').classList.remove('visible');
+  document.getElementById('wowSpinner').classList.add('visible');
+  showError('wow-error', '');
+  const data = await callAPI(wowPrompt(), 'wow-error');
+  document.getElementById('wowSpinner').classList.remove('visible');
+  if (!data) return;
+  renderWow(data);
+  setTimeout(() => preloadWow(), 1000);
+}
+
+function renderWow(data) {
+  document.getElementById('wowTag').textContent = data.tag;
+  document.getElementById('wowHeadline').textContent = data.headline;
+  document.getElementById('wowIndustry').textContent = data.industry;
+  document.getElementById('wowExplanation').textContent = data.explanation;
+  document.getElementById('wowWhy').textContent = data.why_matters;
+  document.getElementById('wowImplications').innerHTML = data.implications.map(i =>
+    `<div class="wow-impl"><div class="wow-impl-dot"></div><span>${i}</span></div>`
+  ).join('');
+  document.getElementById('wowCard').classList.add('visible');
+  document.getElementById('wowedReadyTag').classList.remove('visible');
+  document.getElementById('wowed-dot').classList.remove('visible');
+}
+
+// ── PROMPTS ───────────────────────────────────────────────────────────────
+function briefingPrompt(niche, count) {
+  return `Search the web for the LATEST AI developments (2024-2025) for: ${niche}. Return ONLY JSON, no markdown:
+{
+  "news": [${count} objects: {"title","summary"(2-3 sentences specific to ${niche}),"takeaway"(one action),"tags"(2-3 keywords)}],
+  "tutorials": [${count} objects: {"title","summary","takeaway","difficulty"("Beginner"/"Intermediate"/"Advanced"),"tags"}],
+  "tools": [${count} objects: {"title","summary","takeaway","tags"}]
+}
+Be highly specific to ${niche}. Use real current examples only.`;
+}
+
+function wowPrompt() {
+  return `Search the web RIGHT NOW for the single most surprising AI development from the past 7-14 days. Something that genuinely makes people say "wait, AI can do THAT?". Pick something unexpected — not the obvious ChatGPT news. Return ONLY JSON, no markdown:
+{
+  "headline": "punchy specific headline max 12 words",
+  "industry": "which field this is from",
+  "tag": "2-3 word category",
+  "explanation": "3-4 sentences in plain language about what happened",
+  "why_matters": "2-3 sentences on significance and what changes",
+  "implications": ["implication 1","implication 2","implication 3"]
+}`;
+}
+
+// ── API ───────────────────────────────────────────────────────────────────
+async function callAPI(prompt, errorId) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 3000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
+  } catch(e) {
+    if (errorId) showError(errorId, 'Something went wrong — try again.');
+    return null;
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function cardHTML(item, bc, bl, num) {
+  const tags = item.tags ? item.tags.map(t => `<span class="card-tag">${t}</span>`).join('') : '';
+  const diff = item.difficulty ? `<span class="card-tag">${item.difficulty}</span>` : '';
+  return `<div class="card">
+    <div class="card-top"><div class="card-num">${String(num).padStart(2,'0')}</div><span class="card-badge ${bc}">${bl}</span></div>
+    <div class="card-title">${item.title}</div>
+    <div class="card-body">${item.summary}</div>
+    <div class="card-divider"></div>
+    <div class="card-takeaway">${item.takeaway}</div>
+    ${tags||diff?`<div class="card-meta">${diff}${tags}</div>`:''}
+  </div>`;
+}
+function renderCards(id, items, bc, bl) {
+  document.getElementById(id).innerHTML = items.map((item,i) => cardHTML(item,bc,bl,i+1)).join('');
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('visible', !!msg);
+}
+</script>
+</body>
+</html>
